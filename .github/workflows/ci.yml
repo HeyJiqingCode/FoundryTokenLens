@@ -50,7 +50,8 @@ jobs:
         run: npm run build
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        # Browser tests run headless, which only needs the headless shell, not full Chromium.
+        run: npx playwright install --with-deps --only-shell chromium
 
       - name: Browser tests
         run: npm run test:browser
