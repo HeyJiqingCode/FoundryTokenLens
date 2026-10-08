@@ -1,0 +1,113 @@
+.task-linked-sources {
+  display: grid;
+  gap: 4px;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.task-editor-body {
+  padding: 20px;
+}
+.task-editor-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 20px;
+  align-items: start;
+}
+.task-editor-meta > .field {
+  margin-bottom: 0;
+}
+.task-editor-timing {
+  margin-top: 20px;
+}
+.task-daily-periods {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.task-fields-three {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.task-period h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0 0 12px;
+}
+.task-day-label {
+  color: var(--accent);
+}
+.task-night-label {
+  color: var(--violet);
+}
+.task-period + .task-period {
+  padding-left: 20px;
+  border-left: 1px solid var(--line);
+}
+.task-rule-line {
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.task-rule-line strong {
+  display: inline;
+  font-size: inherit;
+}
+.task-rule-line > span {
+  color: var(--secondary);
+}
+
+.scan-source-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.scan-source-option {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 17px;
+  align-items: center;
+  gap: 12px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--control-line);
+  border-radius: var(--control-radius);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 13px;
+}
+.scan-source-option:only-child {
+  grid-column: 1 / -1;
+}
+.scan-selection-count {
+  margin-right: auto;
+  color: var(--secondary);
+  font-size: 13px;
+}
+.scan-source-option:has(input:checked) {
+  border-color: var(--accent);
+}
+.scan-source-option:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.scan-source-option:has(input:disabled) {
+  cursor: default;
+  opacity: 0.55;
+}
+.scan-source-option > svg {
+  color: var(--accent);
+}
+.scan-source-option > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scan-source-option > input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--accent);
+}

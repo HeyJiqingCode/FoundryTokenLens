@@ -1,0 +1,66 @@
+import type source from '../zh-CN/platform.js';
+import type { LocaleMessages } from '../../types.js';
+
+export default {
+  'platform.logDataClearedSpacePending':
+    'Monitoring data cleared, but database space reclamation did not complete.',
+  'platform.systemLogsClearedSpacePending':
+    'System logs cleared, but database space reclamation did not complete.',
+
+  'platform.logPolicy': 'Log retention policy',
+  'platform.logMaxSize': 'System log size limit (MiB)',
+  'platform.logRetentionDays': 'Retention days',
+  'platform.logEventTypes': 'Event types to record',
+  'platform.logLevels': 'Levels to record',
+  'platform.noRecording': 'Do not record',
+  'platform.createEvent': 'Create',
+  'platform.updateEvent': 'Update',
+  'platform.deleteEvent': 'Delete',
+  'platform.savePolicy': 'Save',
+  'platform.logPolicySaved': 'Log retention policy updated.',
+  'platform.logPolicyHint':
+    'Oldest logs are removed when either limit is reached. Event types and levels apply to future entries only.',
+
+  'platform.sqliteHint': 'Database file, including reusable space',
+  'platform.monitoringHint': '{count} diagnostic records processed',
+  'platform.platformDataHint': 'Users, settings and task progress',
+  'platform.systemLogHint': 'Platform activity records',
+  'platform.clearSystemLogs': 'Clear system logs',
+  'platform.clearSystemLogsNotice':
+    'Clears historical scan, operation and system logs in SQLite. Running tasks, execution counts, processing progress and monitoring data are retained.',
+  'platform.systemLogsCleared': 'System logs cleared.',
+  'platform.scheduledScan': 'Scheduled scan',
+  'platform.manualScan': 'Manual scan',
+  'platform.monitoringData': 'Monitoring data',
+  'platform.systemLogs': 'System logs',
+  'platform.systemData': 'System data',
+  'platform.otherData': 'Platform data',
+  'platform.databaseSize': 'SQLite size',
+  'platform.clearLogData': 'Clear monitoring data',
+  'platform.typeDelete': 'Type DELETE to confirm',
+  'platform.clearLogNotice':
+    'Stops current processing and disables all scheduled tasks. Deletes imported logs, usage, calculated costs, import checkpoints and reconciliation progress from SQLite. Users, data sources, price settings, task settings and system logs are retained. Azure Blob files remain intact and can be imported again.',
+  'platform.logDataCleared': 'Local monitoring data cleared. All tasks are disabled.',
+  'platform.logCategory': 'Category',
+  'platform.logLevel': 'Level',
+  'platform.searchLogs': 'Search logs',
+  'platform.allLogs': 'All categories',
+  'platform.allLevels': 'All levels',
+  'platform.taskLogs': 'Task',
+  'platform.operationLogs': 'Operation',
+  'platform.runtimeLogs': 'System',
+  'platform.infoLevel': 'Info',
+  'platform.warningLevel': 'Warning',
+  'platform.errorLevel': 'Error',
+  'platform.logAction': 'Event',
+  'platform.logSubject': 'Subject',
+  'platform.logActor': 'Actor',
+  'platform.logDetails': 'Details',
+  'platform.noLogs': 'No matching logs',
+  'platform.logCount': '{count} entries',
+  'platform.previousLogs': 'Previous page',
+  'platform.nextLogs': 'Next page',
+  'platform.logsAdminOnly': 'System logs are available to administrators.',
+  'platform.started': 'Platform started',
+  'platform.httpRequest': 'API request',
+} satisfies LocaleMessages<typeof source>;

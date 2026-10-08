@@ -1,0 +1,686 @@
+/* Shared building blocks: buttons, cards and their layout, tables, segmented controls and toolbar
+   buttons. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 38px;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--control-radius);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  transition: background 0.18s;
+}
+.button > svg,
+.text-button > svg {
+  flex-shrink: 0;
+}
+.button.secondary {
+  border-color: var(--control-line);
+  background: var(--surface);
+  color: var(--text);
+}
+.button.secondary:hover:not(:disabled) {
+  background: var(--surface-muted);
+}
+.button.primary {
+  padding-inline: 22px;
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 2px 4px #0866dc14;
+}
+.button.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+.icon-button.accent {
+  color: var(--accent);
+}
+.button.secondary.destructive,
+.icon-button.destructive {
+  color: var(--danger);
+}
+.button.secondary.destructive:hover:not(:disabled),
+.icon-button.destructive:hover:not(:disabled) {
+  background: var(--danger-soft);
+}
+.button.danger {
+  background: var(--danger);
+  color: white;
+}
+.button.danger:hover:not(:disabled) {
+  background: var(--danger-hover);
+}
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 13px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.text-button:hover {
+  color: var(--accent-hover);
+}
+.toolbar-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--control-line);
+  border-radius: 9px;
+  background: var(--surface);
+  color: #4b5567;
+}
+.toolbar-icon:hover:not(:disabled) {
+  background: var(--surface-muted);
+}
+.toolbar-icon:disabled {
+  color: #b3bac6;
+  cursor: default;
+}
+.spinning > svg {
+  animation: toolbar-spin 0.9s linear infinite;
+}
+@keyframes toolbar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinning > svg {
+    animation: none;
+  }
+}
+.button.toolbar-button {
+  min-height: 32px;
+  padding: 5px 12px;
+  gap: 6px;
+  font-size: 12px;
+}
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: #e8ecf3;
+}
+.segmented button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 3px 11px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: #4b5567;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.segmented button:hover:not(:disabled) {
+  color: var(--text);
+}
+.segmented button[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 3px #20263318;
+}
+.segmented button:disabled {
+  color: #aab2c0;
+  cursor: not-allowed;
+}
+/* Filter chips with their option lists, and the search box beside them. */
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid var(--control-line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.filter-chip:hover {
+  border-color: #b7c2d3;
+}
+.filter-chip-value {
+  max-width: 220px;
+  overflow: hidden;
+  color: var(--text);
+  font-weight: 550;
+  text-overflow: ellipsis;
+}
+.filter-chip.active,
+.button.toolbar-button[aria-pressed='true'] {
+  border-color: #9dbdf0;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.filter-chip.active .filter-chip-value {
+  color: var(--accent-hover);
+}
+.filter-chip-remove {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+}
+.filter-chip-remove:hover {
+  background: #d6e4fb;
+}
+.filter-popover {
+  min-width: 200px;
+}
+.filter-options {
+  padding: 5px;
+  outline: none;
+}
+.filter-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  outline: none;
+  cursor: default;
+}
+.filter-option[data-focused] {
+  background: var(--surface-muted);
+}
+.filter-option[data-selected] {
+  color: var(--accent);
+  font-weight: 550;
+}
+.search-box {
+  display: inline-flex;
+  flex: 1 1 160px;
+  align-items: center;
+  gap: 6px;
+  max-width: 280px;
+  height: 30px;
+  padding: 0 6px 0 11px;
+  border: 1px solid var(--control-line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--secondary);
+}
+.search-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.search-box input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+/* Count on the left, previous / page / next on the right. */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.pager > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* Filters above a card's table. */
+.card-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+/* Title icons follow the text size and take the color of their subject. */
+.title-icon {
+  flex-shrink: 0;
+  width: 1.15em;
+  height: 1.15em;
+  color: var(--tone);
+}
+
+/* Cards and layout */
+.card-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.card-row {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.card-row.wide-narrow {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}
+.card-row.halves {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.card-row.thirds {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr);
+}
+/* A column of cards beside a taller card: the last one fills, so both columns end together. */
+.card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.card-stack > :last-child {
+  flex: 1;
+}
+.card {
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--surface);
+  box-shadow: var(--inner-card-shadow);
+}
+/* Title rows are as tall as a compact control, with or without actions, so cards side by side
+   start their content on the same line. */
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 32px;
+  margin-bottom: 12px;
+}
+.card-head h2,
+.dialog-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.2px;
+  line-height: 1.4;
+}
+.card-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+.text-button.card-link {
+  min-height: 0;
+  padding: 2px 0;
+  font-size: 12px;
+}
+.card-subhead {
+  margin: 14px 0 6px;
+  color: var(--secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+/* Right under the title row a subhead starts where other cards start their content. */
+.card-head + .card-subhead {
+  margin-top: 0;
+}
+.card-loading,
+.card-empty {
+  color: var(--secondary);
+  font-size: 13px;
+}
+.info-note {
+  margin-top: 28px;
+  padding: 16px 18px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--secondary);
+  font-size: 12px;
+  line-height: 1.9;
+}
+.muted {
+  color: var(--tertiary);
+}
+.text-bad {
+  color: var(--danger);
+  font-weight: 550;
+}
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.value-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.value-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--row-divider);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.value-list li:last-child {
+  border-bottom: 0;
+}
+.value-list li > span > .muted {
+  margin-left: 8px;
+}
+.value-list .share {
+  margin-left: 4px;
+  color: var(--blue);
+}
+
+/* Tables: names left, figures right-aligned in tabular numerals */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.data-table th {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--secondary);
+  font-size: 11.5px;
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--row-divider);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.data-table :is(th, td):first-child {
+  padding-left: 0;
+  text-align: left;
+}
+.data-table :is(th, td):last-child {
+  padding-right: 0;
+}
+.data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.data-table tbody tr:hover td {
+  background: var(--surface-muted);
+}
+/* Records such as log entries: every column reads left to right. */
+.data-table.records :is(th, td) {
+  text-align: left;
+}
+/* A list of settings items: text columns read left to right, row actions close the row. */
+.data-table.list :is(th, td) {
+  text-align: left;
+}
+.data-table.list :is(th, td):last-child {
+  width: 1%;
+  text-align: right;
+}
+.data-table.list td {
+  padding-block: 10px;
+  font-size: 13px;
+  white-space: normal;
+}
+.data-table.list td small {
+  display: block;
+  margin-top: 2px;
+  color: var(--secondary);
+  font-size: 11.5px;
+}
+.data-table .row-actions {
+  justify-content: flex-end;
+}
+.data-table .row-actions > .icon-button {
+  width: 30px;
+  height: 30px;
+}
+/* A name led by a round icon or initials in its subject color, with an optional second line. */
+.member-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.member-identity > div {
+  min-width: 0;
+}
+.member-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--tone);
+  background: var(--tone-soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+.data-table .member-identity {
+  gap: 10px;
+}
+.data-table .member-avatar {
+  flex-basis: 28px;
+  width: 28px;
+  height: 28px;
+  font-size: 11.5px;
+}
+.data-table .member-identity strong {
+  display: block;
+  font-weight: 500;
+}
+/* A fixed window over a long table: rows scroll under a sticky header, the rail starts below it. */
+.table-viewport {
+  --scroll-inset-top: 33px;
+  --scroll-inset-bottom: 4px;
+  max-height: 262px;
+}
+.table-viewport thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: 0;
+  background: var(--surface);
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+.entity-name {
+  display: inline-flex;
+  align-items: center;
+  max-width: 280px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 550;
+  text-align: left;
+}
+.entity-name > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The name inside a clickable row or entry reads as a link on hover. */
+button:hover .link-name {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.share-bar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.share-bar > span {
+  width: 56px;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--chart-grid);
+}
+.share-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: var(--surface-muted);
+  color: var(--secondary);
+  font-size: 11px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.pill.pill-capsule {
+  border-radius: 999px;
+}
+.pill.success {
+  color: var(--success);
+  background: var(--success-soft);
+}
+.pill.warning {
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+.pill.error {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+.status-dot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  background: #8e8e93;
+  border-radius: 50%;
+}
+.pill.success .status-dot {
+  background: #248a3d;
+}
+.pill.warning .status-dot {
+  background: var(--amber);
+}
+.pill.error .status-dot {
+  background: var(--danger);
+}
+.status-code {
+  display: inline-block;
+  color: var(--secondary);
+  font-variant-numeric: tabular-nums;
+}
+.status-code:is(.warn, .error, .ok) {
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.status-code.warn {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+.status-code.error {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.status-code.ok {
+  background: var(--success-soft);
+  color: var(--success);
+}
+/* KPI strips: one card, cells separated by hairlines */
+.kpi-strip {
+  padding: 0;
+}
+/* Label, value and note rows are shared across cells (subgrid), so a label that wraps
+   in one language keeps every value in the strip on the same baseline. */
+.kpi-row {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  grid-template-rows: repeat(3, auto);
+}
+.kpi {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  align-content: start;
+  min-width: 0;
+  padding: 14px 20px 16px;
+  border-left: 1px solid var(--row-divider);
+}
+.kpi:first-child {
+  border-left: 0;
+}
+.kpi-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  color: var(--secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.kpi-value {
+  margin-top: 4px;
+  font-size: 24px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.kpi-value.unavailable,
+.kpi-value .muted {
+  color: var(--secondary);
+}
+.kpi-sub {
+  margin-top: 3px;
+  color: var(--secondary);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.45;
+}
+/* The strip's title row is a card head inside the strip's own padding. */
+.kpi-strip-head {
+  box-sizing: content-box;
+  margin-bottom: 0;
+  padding: 18px 20px 0;
+}

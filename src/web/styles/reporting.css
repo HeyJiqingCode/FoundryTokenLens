@@ -1,0 +1,105 @@
+/* Time range dropdown and raw log fields in the request drawer. */
+.range-popover {
+  width: var(--trigger-width);
+}
+.range-panel {
+  padding: 14px 16px 16px;
+  outline: none;
+}
+/* Two columns filled top to bottom, like the portal's time range picker. */
+.range-options {
+  display: grid;
+  grid-template-rows: repeat(var(--rows), auto);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: column;
+  gap: 2px 12px;
+}
+.range-options .checkbox-label {
+  gap: 8px;
+  margin: 0;
+  padding: 6px 0;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.range-options .checkbox-label input {
+  width: 15px;
+  height: 15px;
+}
+.range-custom-fields {
+  margin-top: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.range-custom-fields .field {
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.range-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+.log-field-group {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+/* Between groups the group rule is the divider under the previous group's last field, so that
+   field keeps the same spacing as the others. */
+.log-field-group + .log-field-group {
+  margin-top: 0;
+}
+.log-field-group dl {
+  margin: 0;
+}
+.log-field {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--row-divider);
+}
+.log-field:last-child {
+  border-bottom: 0;
+}
+.log-field dt {
+  color: var(--secondary);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.log-field dd {
+  margin: 0;
+  min-width: 0;
+}
+.log-field-value + .log-field-value {
+  margin-top: 12px;
+}
+.log-field-value pre {
+  margin: 0;
+  font:
+    12px/1.6 ui-monospace,
+    SFMono-Regular,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+.log-field-value small {
+  display: block;
+  margin-top: 4px;
+  color: var(--secondary);
+  font-size: 10px;
+}
+.log-field.has-conflict dt {
+  color: var(--amber);
+}
+.raw-log-record {
+  margin-top: 24px;
+}
+.raw-log-record pre {
+  padding: 18px 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}

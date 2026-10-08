@@ -1,0 +1,12 @@
+/* A section heading inside a card or dialog: like a card title, one step smaller. */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}

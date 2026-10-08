@@ -1,0 +1,165 @@
+html:has(.app-shell) {
+  overflow: hidden;
+}
+/* The workspace is one white card inset from the window; its title bar sits inside the card. */
+.workspace-main > main {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 0;
+  padding: var(--workspace-gap) var(--workspace-gap) var(--workspace-gap) 0;
+}
+.workspace-card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: clip;
+  border-radius: var(--workspace-radius);
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+}
+.workspace-header {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+/* Title bar: icon and page name at the sidebar menu size, section tabs after a divider,
+   page actions on the right; the rule below it spans the card. */
+.page-header {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 16px;
+  height: 56px;
+  padding-inline: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.page-title > svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.page-title h1 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -1.1px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.page-title-divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 16px;
+  margin-inline: 6px 4px;
+  background: var(--control-line);
+}
+.page-title .section-tabs {
+  align-self: stretch;
+  gap: 24px;
+  padding-inline: 0;
+  border-bottom: 0;
+}
+.page-title .section-tab {
+  display: flex;
+  align-items: center;
+  min-height: 0;
+  padding: 0 2px;
+  font-size: 14px;
+}
+.page-title .section-tabs [role='tab'][aria-selected='true']::after {
+  bottom: 0;
+}
+.page-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+.scroll-viewport {
+  --scroll-inset-top: var(--workspace-radius);
+  --scroll-inset-bottom: var(--workspace-radius);
+  position: relative;
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: clip;
+}
+.scroll-body {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: hidden auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+}
+.scroll-body::-webkit-scrollbar {
+  display: none;
+}
+.scroll-rail {
+  position: absolute;
+  top: var(--scroll-inset-top);
+  bottom: var(--scroll-inset-bottom);
+  right: 0;
+  width: var(--scrollbar-size);
+  overflow: hidden scroll;
+  overscroll-behavior: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+.scroll-rail > div {
+  width: 1px;
+  pointer-events: none;
+}
+.scroll-body:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -3px;
+}
+.scroll-content {
+  display: flow-root;
+  min-width: 0;
+}
+.page-content {
+  padding: 18px 16px;
+}
+@supports selector(::-webkit-scrollbar) {
+  .scroll-rail {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+  .scroll-rail::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+  }
+  .scroll-rail::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scroll-rail::-webkit-scrollbar-thumb {
+    min-height: 40px;
+    min-width: 40px;
+    border: var(--scrollbar-inset) solid transparent;
+    border-radius: 999px;
+    background: var(--scrollbar-thumb);
+    background-clip: padding-box;
+  }
+  .scroll-rail::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
+  }
+  .scroll-rail::-webkit-scrollbar-button {
+    display: none;
+  }
+}
+@media (forced-colors: active) {
+  .scroll-rail {
+    scrollbar-color: auto;
+  }
+  .scroll-rail::-webkit-scrollbar-thumb {
+    background-color: CanvasText;
+  }
+}

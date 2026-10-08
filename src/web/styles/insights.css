@@ -1,0 +1,660 @@
+/* Data views: overview, usage analysis and requests. */
+
+/* Toolbar under the page title: filters on the left, granularity and the reporting window on
+   the right, the resolved window summary below. It stays outside the scrolling page. */
+.data-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px 2px;
+}
+.data-meta {
+  overflow: hidden;
+  color: var(--secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.request-id-search {
+  flex: 0 0 auto;
+}
+.request-id-field {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.request-id-field > * {
+  grid-area: 1 / 1;
+}
+.request-id-field > span {
+  visibility: hidden;
+  padding-right: 6px;
+  font-size: 12px;
+  white-space: pre;
+}
+/* Chrome reserves room for its clear button even when the field is empty, which clips the prompt;
+   the applied filter has its own clear button. */
+.request-id-field input::-webkit-search-cancel-button {
+  appearance: none;
+}
+.data-time .segmented button {
+  padding-inline: 8px;
+}
+.data-time {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+/* A hidden copy of the bar in its default state gives the width the bar keeps for any window. */
+.range-sizer {
+  position: absolute;
+  right: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.data-time .segmented button[hidden] {
+  display: none;
+}
+/* Another window than a quick range fills the bar; a name too long for it ends in an ellipsis
+   (full name on hover). */
+.range-window .range-custom {
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+}
+.range-custom > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Filters */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.filter-row-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+/* Overview rows split 4:3 so the four cost tiles and three health tiles are equally wide,
+   and every row below keeps the same edges. */
+.overview-kpis,
+.card-row.overview-split {
+  grid-template-columns: minmax(0, 4fr) minmax(0, 3fr);
+}
+.comparison {
+  display: inline-flex;
+  flex-wrap: wrap;
+  column-gap: 6px;
+}
+.comparison > * {
+  white-space: nowrap;
+}
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  font-weight: 600;
+}
+.delta-neutral {
+  color: var(--slate);
+}
+.delta-attention {
+  color: var(--amber);
+}
+.delta-bad {
+  color: var(--danger);
+}
+.delta-good {
+  color: var(--success);
+}
+
+/* Charts */
+.chart {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+.chart svg {
+  display: block;
+  overflow: visible;
+}
+/* A card holding a filling chart or the heatmap lays out as a column so it can grow. */
+.card:has(> .chart.fill, > .heatmap) {
+  display: flex;
+  flex-direction: column;
+}
+/* Fills the card; the neighbouring card sets the row height, this is only a floor. */
+.chart.fill {
+  flex: 1 1 0;
+  min-height: 200px;
+}
+/* Out of flow, so the drawing never holds the card open while the row shrinks. */
+.chart.fill > svg {
+  position: absolute;
+  inset: 0;
+}
+.chart text {
+  fill: var(--secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.chart-grid {
+  stroke: var(--chart-grid);
+}
+.chart-baseline {
+  stroke: #d6dce6;
+}
+.chart-hover {
+  fill: var(--accent);
+  opacity: 0.07;
+}
+.chart-crosshair {
+  stroke: #c5cedb;
+  stroke-dasharray: 3 3;
+}
+.chart-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+.chart-dot {
+  fill: currentColor;
+}
+.chart-point {
+  fill-opacity: 0.55;
+}
+.chart-empty-note {
+  position: absolute;
+  inset: 0 0 24px 48px;
+  display: grid;
+  place-items: center;
+  color: var(--secondary);
+  font-size: 12px;
+  pointer-events: none;
+}
+.chart-tooltip {
+  position: absolute;
+  top: 4px;
+  z-index: 3;
+  min-width: 190px;
+  padding: 10px 12px;
+  border: 1px solid #e3e8f1;
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px #20263322;
+  font-size: 12px;
+  pointer-events: none;
+}
+.chart-tooltip-title {
+  margin-bottom: 6px;
+  color: var(--secondary);
+}
+.chart-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.7;
+}
+.chart-tooltip-row.total {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--row-divider);
+  font-weight: 600;
+}
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0 0 8px;
+  padding: 0;
+  color: #465165;
+  font-size: 12px;
+  list-style: none;
+}
+.chart-legend b {
+  margin-left: 6px;
+  color: var(--text);
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+.legend-swatch {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  margin-right: 7px;
+  border-radius: 2px;
+  vertical-align: -0.5px;
+}
+.legend-swatch.dashed {
+  width: 12px;
+  height: 2px;
+  vertical-align: 3px;
+}
+.histogram {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 132px;
+  margin-top: 10px;
+}
+.histogram-column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+  height: 100%;
+}
+.histogram-column i {
+  display: block;
+  width: 100%;
+  min-height: 1px;
+  border-radius: 4px 4px 0 0;
+  opacity: 0.85;
+}
+.histogram-column b {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 550;
+}
+.histogram-column span {
+  color: var(--secondary);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+.histogram-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.histogram-pair .card-subhead {
+  margin-top: 0;
+}
+/* The seven day rows share the height the card row gives them. */
+.heatmap {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+.heatmap-grid {
+  display: grid;
+  flex: 1;
+  grid-template-rows: repeat(7, minmax(0, 1fr)) auto;
+  gap: 3px;
+  margin-top: 4px;
+}
+.heatmap-row {
+  display: grid;
+  grid-template-columns: 40px repeat(24, minmax(0, 1fr));
+  align-items: center;
+  gap: 3px;
+  color: var(--secondary);
+  font-size: 10.5px;
+}
+.heatmap-row:not(.heatmap-axis) {
+  align-items: stretch;
+}
+.heatmap-row:not(.heatmap-axis) > span {
+  align-self: center;
+}
+.heatmap-row i {
+  display: block;
+  min-height: 16px;
+  border-radius: 3px;
+  background: var(--surface-muted);
+}
+.heatmap-axis span:not(:first-child) {
+  text-align: center;
+}
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 12px;
+  color: var(--secondary);
+  font-size: 11px;
+}
+.heatmap-scale {
+  width: 120px;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--surface-muted), var(--blue));
+}
+.composition-bar {
+  display: flex;
+  height: 10px;
+  margin: 4px 0 12px;
+  overflow: hidden;
+  border-radius: 5px;
+}
+.call-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.call-list li + li {
+  border-top: 1px solid var(--row-divider);
+}
+.call-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  text-align: left;
+}
+.call-list strong {
+  font-size: 13px;
+  font-weight: 550;
+}
+.call-list small {
+  display: block;
+  margin-top: 2px;
+  color: var(--secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.call-list b {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Requests: the table body scrolls under a frozen header; the page itself does not. */
+.page-fill > .scroll-body {
+  display: flex;
+  flex-direction: column;
+}
+.page-fill .page-content {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+.request-page,
+.request-card,
+.request-table-region {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+/* With the drawer open the table card fills the page, so the drawer keeps a usable height
+   even when the list has only a few rows. */
+.page-fill:has(.drawer-open),
+.page-fill:has(.drawer-open) > .scroll-body,
+.page-fill:has(.drawer-open) .page-content,
+.request-page.drawer-open,
+.drawer-open .request-card,
+.drawer-open .request-table-region {
+  flex-grow: 1;
+}
+.request-card {
+  --request-head-height: 38px;
+  position: relative;
+  padding: 0;
+  overflow: clip;
+}
+.request-table-region {
+  position: relative;
+}
+.request-table-viewport {
+  --scroll-inset-top: var(--request-head-height);
+  --scroll-inset-bottom: 4px;
+}
+.request-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12.5px;
+}
+.request-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: var(--request-head-height);
+  padding: 0 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--secondary);
+  font-size: 11.5px;
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+}
+.request-table td {
+  height: 40px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--row-divider);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.request-table :is(th, td):nth-child(-n + 3) {
+  text-align: left;
+}
+.request-table :is(th, td):first-child {
+  padding-left: 20px;
+}
+.request-table :is(th, td):last-child {
+  padding-right: 20px;
+}
+.request-table tbody tr {
+  cursor: pointer;
+}
+.request-table tbody tr:hover td {
+  background: var(--surface-muted);
+}
+.request-table tbody tr.selected td {
+  background: #eef4ff;
+}
+.request-open {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.request-model {
+  font-weight: 550;
+}
+.request-table td small {
+  margin-left: 6px;
+  color: var(--tertiary);
+  font-size: 11.5px;
+}
+.request-table .request-cost {
+  font-weight: 600;
+}
+.request-empty {
+  padding: 28px 20px;
+}
+.request-pager {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  border-top: 1px solid var(--line);
+}
+/* The drawer covers the right side of the whole table card, header to pager, and follows the
+   card's right-hand corners. */
+.request-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  width: min(720px, 72%);
+  border-left: 1px solid var(--line);
+  border-radius: 0 calc(var(--card-radius) - 1px) calc(var(--card-radius) - 1px) 0;
+  background: var(--surface);
+  box-shadow: -12px 0 28px #2026331a;
+}
+.request-drawer-head {
+  flex-shrink: 0;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.request-drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.request-drawer-title h2 {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.request-drawer-title h2:focus {
+  outline: none;
+}
+.request-drawer-title .icon-button {
+  margin-left: auto;
+}
+.drawer-tag {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--secondary);
+  font-size: 11px;
+}
+.request-drawer-sub {
+  margin-top: 4px;
+  color: var(--secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.request-drawer-cost {
+  margin-top: 10px;
+  font-size: 26px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.6px;
+}
+.request-drawer-viewport {
+  --scroll-inset-top: 6px;
+  --scroll-inset-bottom: 6px;
+  flex: 0 1 auto;
+}
+.request-drawer-body {
+  padding: 4px 20px 20px;
+}
+.request-drawer-body h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 18px 0 8px;
+  color: var(--tertiary);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+.drawer-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--row-divider);
+  border-radius: 10px;
+}
+.drawer-metrics > div {
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  padding: 9px 12px;
+  border-right: 1px solid var(--row-divider);
+  border-bottom: 1px solid var(--row-divider);
+}
+.drawer-metrics > div:nth-child(3n) {
+  border-right: 0;
+}
+.drawer-metrics > div:nth-last-child(-n + 3) {
+  border-bottom: 0;
+}
+.drawer-metrics dt {
+  color: var(--secondary);
+  font-size: 11.5px;
+}
+.drawer-metrics dd {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.drawer-metrics dd small {
+  margin-left: 6px;
+  color: var(--tertiary);
+  font-size: 11px;
+  font-weight: 400;
+}
+.drawer-billing-total td {
+  font-weight: 600;
+}
+.drawer-note {
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+  color: var(--secondary);
+  font-size: 11.5px;
+}
+.drawer-fields {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 8px 12px;
+  margin: 0;
+  font-size: 12.5px;
+}
+.drawer-fields dt {
+  color: var(--secondary);
+}
+.drawer-fields dd {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.drawer-fields .text-button {
+  min-height: 0;
+  padding: 0;
+  font-size: 12px;
+}
+.drawer-location span.mono {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.drawer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.request-drawer-body .log-field-group h4,
+.request-drawer-body .raw-log-record h4 {
+  font-size: 12px;
+  font-weight: 600;
+}

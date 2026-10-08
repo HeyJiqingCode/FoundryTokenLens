@@ -1,0 +1,22 @@
+/* Logs scroll under their frozen header in a taller window than other card tables. */
+.table-viewport.system-log-viewport {
+  max-height: 420px;
+}
+/* The details take the rest of the row, wrap anywhere and show three lines with the full text on
+   hover, so long change records neither widen nor stretch the table. */
+.system-log-table td:last-child {
+  width: 100%;
+  min-width: 200px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.log-details {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.system-log-pager {
+  margin-top: 12px;
+}

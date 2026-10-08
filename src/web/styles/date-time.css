@@ -1,0 +1,331 @@
+.picker-control {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 0 4px 0 10px;
+  border: 1px solid var(--control-line);
+  border-radius: var(--control-radius);
+  background: var(--surface);
+  color: var(--text);
+}
+.picker-control:focus-within {
+  outline: 2px solid var(--focus-ring);
+  border-color: var(--accent);
+}
+.picker-control[data-disabled],
+.timezone-field[data-disabled] .picker-control {
+  background: var(--surface-disabled);
+  opacity: 0.7;
+}
+.date-input {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.date-unbounded-value {
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+}
+.date-segment {
+  padding: 2px 1px;
+  border-radius: 3px;
+  outline: none;
+}
+.date-segment[data-type='literal'] {
+  padding: 0;
+  color: var(--secondary);
+  white-space: pre;
+}
+.date-segment[data-placeholder] {
+  color: var(--secondary);
+}
+.date-segment:focus {
+  background: var(--accent);
+  color: #fff;
+}
+.picker-icon-button {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--secondary);
+}
+.picker-icon-button:hover:not(:disabled),
+.picker-icon-button[data-hovered] {
+  background: var(--surface-muted);
+  color: var(--text);
+}
+.picker-popover {
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  border: 1px solid transparent;
+  border-radius: var(--card-radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 12px 40px #20263324;
+  overflow: clip;
+}
+.picker-viewport {
+  --scroll-inset-top: var(--card-radius);
+  --scroll-inset-bottom: var(--card-radius);
+  border-radius: inherit;
+}
+/* One size for every date picker: the compact calendar of the time range dropdown. */
+.calendar-popover {
+  width: 256px;
+}
+.calendar-dialog {
+  padding: 12px;
+  outline: none;
+}
+.calendar-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.calendar-heading h2 {
+  font-size: 13px;
+  font-weight: 600;
+}
+.calendar-heading > div {
+  display: flex;
+  gap: 4px;
+}
+.date-calendar table {
+  width: 100%;
+  border-spacing: 0 1px;
+  table-layout: fixed;
+}
+.date-calendar th {
+  color: var(--secondary);
+  font-size: 11px;
+  font-weight: 400;
+  height: 22px;
+  text-align: center;
+}
+.date-calendar td {
+  text-align: center;
+  padding: 0;
+}
+.calendar-day {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: auto;
+  border-radius: 7px;
+  font-size: 12px;
+  cursor: pointer;
+  outline-offset: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.calendar-day[data-outside-month] {
+  color: #a7acb6;
+}
+.calendar-day[data-hovered] {
+  background: var(--surface-muted);
+}
+.calendar-day[data-today] {
+  color: var(--accent);
+  font-weight: 600;
+}
+.calendar-day[data-selected] {
+  background: var(--accent);
+  color: #fff;
+}
+.calendar-day[data-disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+.calendar-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.calendar-time-row > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--secondary);
+  font-size: 12px;
+}
+.time-input {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 82px;
+  height: 28px;
+  padding-inline: 8px;
+  border: 1px solid var(--control-line);
+  border-radius: 8px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.calendar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+/* Picker footers (calendar and time wheels) use one small button size, whatever the variant. */
+:is(.calendar-actions, .time-wheel-actions) .button {
+  min-height: 28px;
+  padding: 3px 12px;
+  font-size: 12px;
+}
+.calendar-shortcuts {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.picker-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.picker-label-row > span {
+  font-size: 11px;
+  color: var(--secondary);
+}
+.timezone-field .picker-control input {
+  flex: 1;
+  height: 34px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  outline: none;
+}
+.timezone-popover {
+  width: var(--trigger-width);
+}
+.timezone-options {
+  outline: none;
+  padding: 5px;
+}
+.timezone-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  outline: none;
+  font-size: 12px;
+  cursor: pointer;
+}
+.timezone-option[data-focused] {
+  background: var(--surface-muted);
+}
+.timezone-option[data-selected] {
+  color: var(--accent);
+}
+.timezone-empty {
+  padding: 15px 10px;
+  font-size: 12px;
+  color: var(--secondary);
+}
+
+.timezone-field .picker-control {
+  padding-right: calc(var(--select-arrow-inset) - (28px - var(--select-arrow-size)) / 2);
+}
+.timezone-field .picker-icon-button svg {
+  width: var(--select-arrow-size);
+  height: var(--select-arrow-size);
+}
+
+.clock-field .picker-control > .react-aria-TimeField {
+  flex: 1;
+  min-width: 0;
+}
+.clock-popover {
+  width: 220px;
+}
+.clock-options {
+  padding: 12px;
+  outline: none;
+}
+.time-wheels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.time-wheel-label {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: var(--secondary);
+  margin-bottom: 8px;
+}
+.time-wheel-window {
+  position: relative;
+}
+.time-wheel-window::before {
+  content: '';
+  position: absolute;
+  top: 64px;
+  left: 0;
+  right: 0;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface-muted);
+  border-block: 1px solid var(--line);
+  pointer-events: none;
+}
+.time-wheel-viewport {
+  height: 160px;
+  --scroll-inset-top: 8px;
+  --scroll-inset-bottom: 8px;
+}
+.time-wheel-viewport .scroll-content {
+  padding-block: 64px;
+}
+.time-wheel-value {
+  display: block;
+  width: 100%;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--secondary);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.time-wheel-value[aria-pressed='true'] {
+  color: var(--text);
+  font-weight: 600;
+}
+.time-wheel-value:focus-visible {
+  outline-offset: -3px;
+  border-radius: 8px;
+}
+.time-wheel-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 10px;
+}

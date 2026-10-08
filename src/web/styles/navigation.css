@@ -1,0 +1,48 @@
+.section-tabs {
+  display: flex;
+  gap: 28px;
+  min-width: 0;
+  padding-inline: 4px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #c9c9d0 transparent;
+}
+.section-tabs .section-tab {
+  position: relative;
+  flex-shrink: 0;
+  min-height: 48px;
+  padding: 12px 2px;
+  border: 0;
+  background: transparent;
+  color: var(--secondary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  text-align: left;
+  white-space: nowrap;
+}
+.section-tabs [role='tab']:hover {
+  color: var(--text);
+}
+.section-tabs [role='tab'][aria-selected='true'] {
+  color: var(--accent);
+}
+.section-tabs [role='tab'][aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 6px;
+  height: 2px;
+  background: var(--accent);
+  pointer-events: none;
+}
+.section-tabs [role='tab']:focus-visible {
+  outline-offset: -4px;
+  border-radius: 4px;
+}
+[role='tabpanel']:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 6px;
+  border-radius: var(--workspace-radius);
+}

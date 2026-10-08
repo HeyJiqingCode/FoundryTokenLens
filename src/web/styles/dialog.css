@@ -1,0 +1,130 @@
+.app-dialog {
+  width: var(--dialog-width);
+  max-width: none;
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--card-radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 24px 80px #20263326;
+  /* Picker portals may extend past the dialog; ScrollViewport owns content clipping. */
+  overflow: visible;
+}
+.app-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.dialog-viewport {
+  --scroll-inset-top: var(--card-radius);
+  --scroll-inset-bottom: var(--card-radius);
+  border-radius: inherit;
+}
+.app-dialog::backdrop {
+  background: #20263355;
+  backdrop-filter: blur(3px);
+}
+/* The title row reads like a card head: icon and title at card size, the subtitle below. */
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.dialog-heading p {
+  color: var(--secondary);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.dialog-title {
+  min-width: 0;
+}
+.dialog-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  min-width: 0;
+}
+.dialog-subtitle p {
+  margin-top: 0;
+  min-width: 0;
+}
+.dialog-subtitle .dialog-subtitle-action {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+}
+/* Footer buttons use the compact size of card and toolbar actions. */
+.dialog-actions .button {
+  min-height: 32px;
+  padding: 5px 12px;
+  gap: 6px;
+  font-size: 12px;
+}
+.dialog-actions .button > svg {
+  width: 14px;
+  height: 14px;
+}
+
+.dialog-body {
+  padding: 20px;
+}
+
+.dialog-confirmation {
+  padding: 20px;
+}
+.dialog-confirmation > p {
+  margin-bottom: 20px;
+  color: var(--secondary);
+  font-size: 13px;
+  line-height: 1.75;
+}
+.dialog-confirmation .field {
+  max-width: 640px;
+  margin-bottom: 0;
+}
+
+.dialog-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.dialog-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.dialog-section {
+  position: relative;
+  min-width: 0;
+  padding: 20px;
+}
+.dialog-section + .dialog-section::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  bottom: 20px;
+  left: 0;
+  width: 1px;
+  background: var(--line);
+}
+.dialog-section .section-title {
+  margin-bottom: 16px;
+}
+.dialog-section .field:last-child {
+  margin-bottom: 0;
+}

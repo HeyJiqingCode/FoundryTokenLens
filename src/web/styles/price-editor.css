@@ -1,0 +1,166 @@
+.price-model-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.price-model-fields .field {
+  margin: 0;
+}
+.price-model-fields input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+.price-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 370px;
+}
+.price-editor-section {
+  min-width: 0;
+  padding-right: 20px;
+}
+.price-editor-section + .price-editor-section {
+  padding: 0 0 0 20px;
+  border-left: 1px solid var(--line);
+}
+.price-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.price-unit-note {
+  flex-shrink: 0;
+  color: var(--secondary);
+  font-size: 12px;
+  line-height: 18px;
+  text-align: right;
+  white-space: nowrap;
+}
+.price-fixed-rates {
+  --price-context-width: 112px;
+  --price-cell-padding: 6px;
+}
+.price-fixed-rates,
+.price-period-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.price-fixed-rates > .checkbox-label {
+  font-size: 13px;
+  gap: 8px;
+  margin: 0;
+}
+.price-fixed-rates > .checkbox-label input {
+  margin: 0;
+}
+.price-fixed-rates > .field {
+  /* Align with the Output cell: context label plus two of the four price columns. */
+  width: calc((100% + var(--price-context-width)) / 2 - var(--price-cell-padding));
+}
+.price-fixed-rates > .field,
+.price-period-fields > .field {
+  margin: 0;
+}
+.price-rate-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+}
+.price-context-column {
+  width: var(--price-context-width);
+}
+.price-rate-table thead th {
+  padding: 0 var(--price-cell-padding) 4px;
+  color: var(--secondary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+  vertical-align: bottom;
+}
+.price-rate-table tbody td {
+  padding: 5px var(--price-cell-padding);
+  vertical-align: bottom;
+}
+.price-rate-table tbody tr:first-child > td {
+  padding-top: 3px;
+}
+.price-rate-table th:first-child,
+.price-rate-table td:first-child {
+  padding-left: 0;
+}
+.price-rate-table th:last-child,
+.price-rate-table td:last-child {
+  padding-right: 0;
+}
+.price-rate-table tbody th {
+  padding: 4px 10px 4px 0;
+}
+.price-rate-table tbody tr:last-child > * {
+  padding-bottom: 0;
+}
+.price-band-heading {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+}
+.price-band-heading small {
+  display: block;
+  color: var(--secondary);
+  font-size: 11px;
+  font-weight: 400;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+.price-amount-control {
+  position: relative;
+  min-width: 0;
+}
+.price-amount-control > span {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: var(--secondary);
+  pointer-events: none;
+}
+.price-amount-control input {
+  height: 38px;
+  min-height: auto;
+  padding: 7px 10px 7px 27px;
+  font-variant-numeric: tabular-nums;
+  line-height: inherit;
+}
+.price-amount-control input::placeholder {
+  color: var(--secondary);
+}
+.price-version-action {
+  margin-right: auto;
+}
+.price-fetch-button svg {
+  color: var(--accent);
+}
+.price-fetch-button:disabled svg {
+  color: inherit;
+}
+
+.price-editor-workspace {
+  display: grid;
+}
+.price-editor-workspace > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.price-editor-inactive {
+  visibility: hidden;
+  pointer-events: none;
+}
+.price-quote-view {
+  background: var(--surface);
+}

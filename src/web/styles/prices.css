@@ -1,0 +1,215 @@
+.price-history-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.model-price-table th:first-child {
+  width: 220px;
+}
+.model-price-table th:nth-child(3) {
+  width: 144px;
+}
+.price-model-name {
+  display: block;
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+.price-model-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.price-model-identity > div {
+  min-width: 0;
+}
+.price-model-logo,
+.price-model-initial {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+.price-model-initial {
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--surface-muted);
+  color: var(--secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.price-model-meta {
+  color: var(--secondary);
+  font-size: 12px;
+  line-height: 14px;
+  margin-top: 4px;
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.price-source {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--tone);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.price-source::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.price-list-period {
+  color: var(--secondary);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.model-price-actions .price-history-action {
+  color: var(--violet);
+}
+.price-dialog-body {
+  padding: 20px;
+}
+.price-dialog-body > .field:last-child {
+  margin-bottom: 0;
+}
+.price-history-entry {
+  position: relative;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.price-history-entry:first-child {
+  padding-top: 0;
+}
+.price-history-entry:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.price-history-heading > div {
+  flex: 1;
+}
+.price-history-heading strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.price-history-heading p {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--secondary);
+}
+.price-list-pricing {
+  display: grid;
+  gap: 2px;
+}
+.price-context-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 16px;
+}
+.price-context-label,
+.price-context-dash {
+  flex-shrink: 0;
+  color: var(--secondary);
+}
+.price-breakdown {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 16px;
+}
+.price-breakdown-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--tone);
+}
+.price-breakdown-label {
+  color: inherit;
+  font-weight: 400;
+  font-size: 11px;
+}
+.price-breakdown-value {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.price-empty {
+  color: var(--secondary);
+}
+.price-history-bands {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 14px;
+}
+.price-history-bands.unified {
+  grid-template-columns: minmax(0, 1fr);
+}
+.price-history-column {
+  position: relative;
+  min-width: 0;
+}
+.price-history-column:not(:last-child) {
+  padding-right: 32px;
+}
+.price-history-column + .price-history-column {
+  padding-left: 32px;
+}
+.price-history-column + .price-history-column::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  width: 1px;
+  background: var(--line);
+}
+.price-history-band-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.price-history-band-heading strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+.price-history-band-heading > span {
+  color: var(--secondary);
+  font-size: 11px;
+}
+.price-breakdown.stacked {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) max-content;
+}
+.price-breakdown.stacked.image {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) max-content;
+}
+.price-breakdown.stacked .price-breakdown-item {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+.price-breakdown.stacked .price-breakdown-value {
+  max-width: 100%;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.price-history-notes {
+  font-size: 12px;
+  color: var(--secondary);
+  margin-top: 16px;
+}

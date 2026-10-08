@@ -1,0 +1,17 @@
+.git
+.github
+node_modules
+dist
+data
+tests
+test-results
+playwright-report
+.playwright-mcp
+.superpowers
+.env
+.env.*
+**/*.sqlite*
+**/.secret-key
+*.md
+assets
+docs

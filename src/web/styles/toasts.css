@@ -1,0 +1,86 @@
+/* The stack scrolls, which clips its content; the list padding leaves room for the toast shadow,
+   and the viewport sits outward by the same amount so toasts stay 28px from the corner. */
+.toast-viewport {
+  --toast-shadow-room: 16px 24px 32px;
+  position: fixed;
+  z-index: 1000;
+  top: 12px;
+  right: 4px;
+  display: flex;
+  flex-direction: column;
+  width: 430px;
+  max-height: calc(100dvh - 24px);
+  pointer-events: none;
+}
+.toast-stack {
+  --scroll-inset-top: 30px;
+  --scroll-inset-bottom: 46px;
+}
+.toast-stack > .scroll-rail {
+  right: 24px;
+  pointer-events: auto;
+}
+.toast-list {
+  display: grid;
+  gap: 12px;
+  padding: var(--toast-shadow-room);
+}
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--card-radius);
+  background: var(--surface);
+  box-shadow:
+    0 1px 3px #2034541a,
+    0 8px 24px #2034541f;
+  pointer-events: auto;
+}
+.toast-symbol {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+.toast-success .toast-symbol {
+  color: var(--success);
+  background: var(--success-soft);
+}
+.toast-error .toast-symbol {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+.toast-body {
+  flex: 1;
+  min-width: 0;
+  padding-top: 4px;
+}
+.toast-message-viewport {
+  --scroll-inset-top: 0px;
+  --scroll-inset-bottom: 0px;
+  max-height: 240px;
+}
+.toast-message {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+.toast-close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  color: var(--secondary);
+  background: transparent;
+}
+.toast-close:hover {
+  background: var(--surface-muted);
+}

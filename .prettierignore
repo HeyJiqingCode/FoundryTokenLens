@@ -1,0 +1,10 @@
+node_modules
+dist
+data
+.playwright-mcp
+.superpowers
+package-lock.json
+LICENSE
+
+playwright-report/
+test-results/

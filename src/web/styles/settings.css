@@ -1,0 +1,85 @@
+.settings-content:focus-visible {
+  outline-offset: -3px;
+}
+.entra-card .settings-form {
+  margin-top: 0;
+}
+.entra-sign-in-grid {
+  grid-template-areas:
+    'enabled policy'
+    'platform callback';
+}
+.entra-sign-in-grid > div {
+  display: contents;
+}
+.entra-sign-in-grid > div:first-child > .entra-enabled-control {
+  grid-area: enabled;
+}
+.entra-sign-in-grid > div:first-child > .field {
+  grid-area: platform;
+}
+.entra-sign-in-grid > div:last-child > .checkbox-label {
+  grid-area: policy;
+}
+.entra-sign-in-grid > div:last-child > .field {
+  grid-area: callback;
+}
+
+/* The account forms fill their card or dialog section, with the actions at the bottom. */
+.account-card {
+  display: flex;
+  flex-direction: column;
+}
+.account-form,
+.account-form > fieldset {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+.account-form.settings-form {
+  margin-top: 4px;
+}
+/* A read-only value on a form row, as tall as the inputs beside it. */
+.field-value {
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+}
+.account-form .field,
+.dialog-section .field {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 24px;
+}
+.account-form .field-label,
+.dialog-section .field-label {
+  text-align: right;
+}
+.account-form .field-hint,
+.dialog-section .field-hint {
+  grid-column: 2;
+}
+.account-form .form-actions {
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.member-role {
+  position: relative;
+  min-width: 0;
+  width: max-content;
+  max-width: 100%;
+}
+.member-role select {
+  appearance: none;
+  width: auto;
+  max-width: 100%;
+  padding-right: var(--select-text-inset);
+}
+.member-role select:disabled {
+  background: var(--surface-muted);
+  color: var(--secondary);
+}

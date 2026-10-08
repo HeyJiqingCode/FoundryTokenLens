@@ -1,0 +1,234 @@
+@import './styles/tokens.css';
+@import './styles/viewport.css';
+/* Shared blocks come before the page files, so a page rule overrides them at equal specificity. */
+@import './styles/ui.css';
+@import './styles/dialog.css';
+@import './styles/navigation.css';
+@import './styles/sections.css';
+@import './styles/toasts.css';
+@import './styles/forms.css';
+@import './styles/user-menu.css';
+@import './styles/settings.css';
+@import './styles/sources.css';
+@import './styles/tasks.css';
+@import './styles/platform.css';
+@import './styles/prices.css';
+@import './styles/price-editor.css';
+@import './styles/date-time.css';
+@import './styles/language.css';
+@import './styles/reporting.css';
+@import './styles/insights.css';
+
+:root {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: var(--text);
+  background: var(--sidebar);
+  font-synthesis: none;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --sidebar-width: 240px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 1280px;
+}
+button {
+  font: inherit;
+  cursor: pointer;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 4px;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+/* Application frame */
+.app-shell {
+  --workspace-top: 36px;
+  --workspace-gap: 12px;
+  --workspace-header-height: 50px;
+  height: 100dvh;
+  display: flex;
+  overflow: clip;
+}
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  padding: var(--workspace-top) 20px 24px;
+  background: var(--sidebar);
+}
+/* The link covers the whole top of the sidebar around the logo, so a click anywhere near it
+   returns to the overview; the logo and name stay where the sidebar padding put them. */
+.brand {
+  display: flex;
+  flex-shrink: 0;
+  box-sizing: content-box;
+  height: var(--workspace-header-height);
+  align-items: center;
+  gap: 12px;
+  margin: calc(-1 * var(--workspace-top)) -20px 0;
+  padding: var(--workspace-top) 28px 0;
+}
+.brand:focus-visible {
+  outline-offset: -4px;
+}
+.brand-mark {
+  display: block;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  box-shadow: 0 4px 12px #2034540c;
+}
+.brand strong {
+  display: block;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.65px;
+}
+.brand small {
+  display: block;
+  margin-top: 4px;
+  color: var(--secondary);
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.1px;
+}
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  margin-top: 48px;
+  min-height: 0;
+}
+.sidebar-navigation {
+  --scroll-inset-top: 0px;
+  --scroll-inset-bottom: 0px;
+  border-radius: 11px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  min-height: 46px;
+  line-height: 20px;
+  margin-bottom: 6px;
+  padding: 12px 15px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: #515156;
+  font-size: 14px;
+  text-align: left;
+  transition:
+    background 0.18s,
+    color 0.18s;
+}
+.nav-item:hover {
+  background: #e5ebf4;
+}
+.nav-item.selected {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #d6e5fa;
+}
+.nav-item.selected svg {
+  color: var(--accent);
+}
+.sidebar-footer {
+  margin-top: auto;
+  flex-shrink: 0;
+  padding-top: 16px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.workspace-main {
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--sidebar-width);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 292px;
+  padding: 32px 12px;
+  text-align: center;
+}
+.empty-state :is(h2, h3) {
+  color: var(--text);
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+  line-height: 1.5;
+}
+.empty-state p {
+  max-width: 355px;
+  margin-top: 11px;
+  color: var(--secondary);
+  font-size: 13px;
+  line-height: 1.85;
+}
+.empty-state .button {
+  margin-top: 24px;
+}
+.recovery-screen {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 24px;
+  background: var(--sidebar);
+}
+
+@media (min-width: 1600px) {
+  .empty-state {
+    min-height: 330px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.auth-loading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--secondary);
+  font-size: 14px;
+}
