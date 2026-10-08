@@ -132,7 +132,7 @@ npm run check
 ```
 
 > Browser tests start their own UI on port 8099 against a mocked API and never touch `data/`.\
-> CI runs the same check on every push to `main` and every pull request; a `v*` tag also publishes the image and a GitHub release.
+> CI runs only when a `v*` tag is pushed: it runs the same check, then publishes the image and a GitHub release.
 
 ## More Details
 
