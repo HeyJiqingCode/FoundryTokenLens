@@ -49,7 +49,7 @@ A self-hosted dashboard for Microsoft Foundry usage. It reads the diagnostic log
 docker run -d --name foundrytokenlens --init --restart unless-stopped \
   -p 127.0.0.1:8080:8080 \
   -v ftl-data:/app/data \
-  ghcr.io/heyjiqingcode/foundrytokenlens:0.0.1
+  ghcr.io/heyjiqingcode/foundrytokenlens:0.0.2
 ```
 
 Open the platform URL, create the administrator, then add a data source, prices and a scheduled task under **Settings**.
