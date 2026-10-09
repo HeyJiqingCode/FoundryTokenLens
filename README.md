@@ -59,7 +59,7 @@ Open the platform URL, create the administrator, then add a data source, prices 
 
 ### Local
 
-Requires [Node.js 24](https://nodejs.org/) and Git. Clone the repository, install dependencies, build, then start:
+Requires [Node.js 26](https://nodejs.org/) and Git. Clone the repository, install dependencies, build, then start:
 
 ```bash
 git clone https://github.com/HeyJiqingCode/FoundryTokenLens.git
