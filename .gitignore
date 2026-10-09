@@ -26,5 +26,6 @@ test-results/
 
 # Local tool scratch and notes for coding assistants
 AGENTS.md
+.claude/
 .playwright-mcp/
 .superpowers/
