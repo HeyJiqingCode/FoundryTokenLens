@@ -29,7 +29,13 @@ export interface BlobReader {
 }
 export type BlobReaderFactory = (source: ResolvedSource) => BlobReader;
 
-export const azureBlobReader: BlobReaderFactory = (source) => {
+/** A download fails only after this long without receiving any data. */
+const DOWNLOAD_IDLE_MS = 30_000;
+
+export const azureBlobReader = (
+  source: ResolvedSource,
+  idleTimeoutMs = DOWNLOAD_IDLE_MS,
+): BlobReader => {
   const client = createBlobClient(source);
   return {
     async list(container, prefix, marker, signal) {
@@ -55,25 +61,37 @@ export const azureBlobReader: BlobReaderFactory = (source) => {
     },
     async read(container, name, offset, count, etag, signal) {
       if (!count) return Buffer.alloc(0);
-      const response = await client
-        .getContainerClient(container)
-        .getBlobClient(name)
-        .download(offset, count, {
-          conditions: { ifMatch: etag },
-          abortSignal: AbortSignal.any([signal, AbortSignal.timeout(30000)]),
-          maxRetryRequests: 0,
-        });
-      if (!response.readableStreamBody) throw new Error('Blob 未返回可读内容');
-      const chunks: Buffer[] = [];
-      let bytes = 0;
-      for await (const chunk of response.readableStreamBody as AsyncIterable<Buffer>) {
-        const buffer = Buffer.from(chunk);
-        bytes += buffer.length;
-        if (bytes > count) throw new Error('Blob 读取超出请求范围');
-        chunks.push(buffer);
+      // A slow link is fine while data keeps arriving; only a stalled download is aborted.
+      const idle = new AbortController();
+      let timer = setTimeout(() => idle.abort(), idleTimeoutMs);
+      const progressed = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => idle.abort(), idleTimeoutMs);
+      };
+      try {
+        const response = await client
+          .getContainerClient(container)
+          .getBlobClient(name)
+          .download(offset, count, {
+            conditions: { ifMatch: etag },
+            abortSignal: AbortSignal.any([signal, idle.signal]),
+            maxRetryRequests: 0,
+          });
+        if (!response.readableStreamBody) throw new Error('Blob 未返回可读内容');
+        const chunks: Buffer[] = [];
+        let bytes = 0;
+        for await (const chunk of response.readableStreamBody as AsyncIterable<Buffer>) {
+          progressed();
+          const buffer = Buffer.from(chunk);
+          bytes += buffer.length;
+          if (bytes > count) throw new Error('Blob 读取超出请求范围');
+          chunks.push(buffer);
+        }
+        if (bytes !== count) throw new Error('Blob 内容未完整读取');
+        return Buffer.concat(chunks);
+      } finally {
+        clearTimeout(timer);
       }
-      if (bytes !== count) throw new Error('Blob 内容未完整读取');
-      return Buffer.concat(chunks);
     },
   };
 };

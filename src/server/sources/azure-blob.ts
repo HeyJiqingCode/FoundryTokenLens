@@ -45,7 +45,9 @@ export function normalizeManagedIdentityEndpoint(value: string) {
 }
 
 export function createBlobClient(source: ResolvedSource) {
-  const options = { retryOptions: { maxTries: 1, tryTimeoutInMs: 10000 } };
+  // No per-try timeout: the SDK sends it as the server-side `timeout`, which would also cut off
+  // downloads that are slow but progressing. Callers bound each call with their own abort signal.
+  const options = { retryOptions: { maxTries: 1 } };
   if (source.authMode === 'managed_identity') {
     const endpoint = normalizeManagedIdentityEndpoint(source.endpoint);
     const credential = source.managedIdentityClientId

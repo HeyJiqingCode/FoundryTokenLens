@@ -430,6 +430,25 @@ test('an incomplete old tail retains its offset without blocking discovery of la
   assert.equal(f.worker.status().pendingScans, 0);
 });
 
+test('a stalled download is reported as a read timeout and keeps the file for retry', async (t) => {
+  const f = fixture(t),
+    read = f.reader.read.bind(f.reader);
+  f.reader.read = async () => {
+    throw Object.assign(new Error('The operation was aborted.'), { name: 'AbortError' });
+  };
+  f.reader.put(LOG_CONTAINERS[0].name, path(), [usage('stalled')]);
+  await f.run();
+  const failed = f.db.connection
+    .prepare('SELECT error, complete FROM import_blobs WHERE failures > 0')
+    .get() as { error: string; complete: number };
+  assert.equal(failed.error, '日志读取超时，下次扫描会从断点继续。');
+  assert.equal(failed.complete, 0);
+  f.reader.read = read;
+  f.at('2026-09-20T03:05:00Z');
+  await f.run();
+  assert.equal(f.analytics.requests({}).total, 1);
+});
+
 test('one failed download cannot prevent listing subsequent pages and later-window files', async (t) => {
   const f = fixture(t),
     failed = path('00', '29'),

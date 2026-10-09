@@ -177,3 +177,55 @@ test('actual SDK paginates inventory and uses If-Match and byte ranges for downl
     (error: unknown) => (error as { statusCode?: number }).statusCode === 412,
   );
 });
+
+test('downloads keep going while data arrives and fail only after an idle period', async (t) => {
+  const body = Buffer.alloc(2000, 'x');
+  const urls: string[] = [];
+  let stallAfterHalf = false;
+  const server = createServer((request, response) => {
+    urls.push(request.url!);
+    response.setHeader('x-ms-request-id', 'synthetic-fixture');
+    response.setHeader('x-ms-version', '2023-11-03');
+    response.writeHead(206, {
+      'Content-Type': 'application/octet-stream',
+      'Content-Length': body.length,
+      'Content-Range': `bytes 0-${body.length - 1}/${body.length}`,
+      etag: '"fixture-etag"',
+    });
+    // Ten slices 60 ms apart: slow overall, but never idle for long.
+    let sent = 0;
+    const timer = setInterval(() => {
+      if (stallAfterHalf && sent >= body.length / 2) return;
+      response.write(body.subarray(sent, sent + 200));
+      sent += 200;
+      if (sent >= body.length) {
+        clearInterval(timer);
+        response.end();
+      }
+    }, 60);
+    response.on('close', () => clearInterval(timer));
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise<void>((resolve) => server.close(() => resolve())));
+  const reader = azureBlobReader(
+    {
+      authMode: 'connection_string',
+      endpoint: '',
+      managedIdentityClientId: '',
+      connectionString: `DefaultEndpointsProtocol=http;AccountName=fixtureacct;AccountKey=${Buffer.alloc(64, 7).toString('base64')};BlobEndpoint=http://127.0.0.1:${(server.address() as AddressInfo).port}/fixtureacct;`,
+    },
+    200,
+  );
+  const signal = AbortSignal.timeout(5000);
+  assert.deepEqual(
+    await reader.read(containers[0], path(), 0, body.length, '"fixture-etag"', signal),
+    body,
+  );
+  // No server-side timeout is imposed on the download itself.
+  assert.equal(urls.at(-1)?.includes('timeout='), false);
+  stallAfterHalf = true;
+  await assert.rejects(
+    reader.read(containers[0], path(), 0, body.length, '"fixture-etag"', signal),
+    (error: unknown) => (error as Error).name === 'AbortError',
+  );
+});

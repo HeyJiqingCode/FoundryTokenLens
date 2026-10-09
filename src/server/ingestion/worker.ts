@@ -19,6 +19,9 @@ const safeError = (error: unknown) => {
   if (code === 401 || code === 403) return 'Blob 访问被拒绝，请检查凭据、权限与网络规则。';
   if (code === 404) return '日志文件或容器已不存在，下次扫描会重试。';
   if (code === 412 || code === 416) return '日志读取期间发生变化，下次扫描会重试。';
+  // A stopped task is handled before this; an abort here is a stalled read or listing.
+  if ((error as Error).name === 'AbortError' || (error as Error).name === 'TimeoutError')
+    return '日志读取超时，下次扫描会从断点继续。';
   return '日志读取未完成，请检查数据源连接；已保存的进度不会丢失。';
 };
 
