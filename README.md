@@ -9,6 +9,8 @@ A self-hosted dashboard for Microsoft Foundry usage. It reads the diagnostic log
 - **Manual Pricing**: Effective periods, short/long context tiers and text/image templates, with prefill from the Azure Retail Prices API
 - **Long/Short Context**: Priced calls classed as short context, long context or Other; filter any view by it and see each class's calls, cost and cost share
 - **Reports**: Overview, cost, tokens & cache, call distribution, performance & reliability, plus a request explorer with CSV export
+- **Drill-Down**: Split charts by model or resource (tokens and cost also by type), hover any bar to see each resource's models, and drag across a time chart to zoom into that span
+- **Cost & Cache Insight**: What prompt caching saved, a month-end cost forecast, and the most expensive calls, the slowest ones and those with the lowest cache hit rate
 - **Shared Filters**: Model, resource, status, context, source IP, time range, granularity and time zone, kept in the URL
 - **System Logs**: Scan runs and settings changes, filterable by category and level, with configurable size, retention and recorded events
 - **Data Management**: Storage broken down into monitoring data, platform data and system logs; clear imported data in one step while users, sources and prices stay and Blob files are untouched
@@ -29,8 +31,11 @@ A self-hosted dashboard for Microsoft Foundry usage. It reads the diagnostic log
 
 - Reads the `insights-logs-azureopenairequestusage` and `insights-logs-requestresponse` containers via a connection string or managed identity
 - Merges records by `resourceId` and `correlationId`; tokens come only from Usage logs and are never estimated when missing
+- Dates each request by when it started (the RequestResponse request time), or by when its log was written if that is missing
+- Keeps each data source's logs apart: a request found in two enabled sources counts in both, and its import is logged as a warning
 - Prices each request at the price in effect when it ran, billing uncached input, cache reads and cache writes separately, and recalculates when logs or prices change
 - Bills long context when prompt tokens exceed the price's threshold, otherwise short; single-row prices count as Other. The class is saved with the cost, so filters always match billing
+- Counts duration, time to first and last token, and speed only for successful calls; speed needs at least 100 output tokens
 - Stores everything in one SQLite database, and one Node.js process serves both the UI and the API
 
 ## Security
@@ -49,7 +54,7 @@ A self-hosted dashboard for Microsoft Foundry usage. It reads the diagnostic log
 docker run -d --name foundrytokenlens --init --restart unless-stopped \
   -p 127.0.0.1:8080:8080 \
   -v ftl-data:/app/data \
-  ghcr.io/heyjiqingcode/foundrytokenlens:0.0.2
+  ghcr.io/heyjiqingcode/foundrytokenlens:0.0.3
 ```
 
 Open the platform URL, create the administrator, then add a data source, prices and a scheduled task under **Settings**.
