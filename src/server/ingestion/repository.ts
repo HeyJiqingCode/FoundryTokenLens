@@ -56,6 +56,7 @@ export function createImportRepository(database: AppDatabase) {
     `UPDATE import_blobs SET checkpoint_etag = ?, checkpoint_created_on = ?, byte_offset = ?, complete = ?,
       failures = 0, retry_at = NULL, error = NULL WHERE source_key = ? AND container = ? AND name = ?`,
   );
+  /** Stores a record: null when already held, else whether it is the request's first record. */
   function storeRecord(blob: BlobRow, offset: number, item: ParsedRecord) {
     const inserted = recordInsert.run({
       source: blob.source_key,
@@ -66,7 +67,7 @@ export function createImportRepository(database: AppDatabase) {
       normalized: JSON.stringify({ ...item, raw: '' }),
     }).changes;
     locationInsert.run(blob.source_key, item.hash, blob.container, blob.name, offset);
-    if (!inserted) return 0;
+    if (!inserted) return null;
     const records = (
       requestRecords.all(blob.source_key, item.resourceId, item.correlationId) as {
         normalized_json: string;
@@ -84,7 +85,7 @@ export function createImportRepository(database: AppDatabase) {
       records.find((record) => record.category === 'usage')?.hash ?? null,
       records.find((record) => record.category === 'requests')?.hash ?? null,
     );
-    return 1;
+    return records.length === 1;
   }
   function savePage(target: { source_key: string; container: string }, items: BlobItem[]) {
     db.transaction(() => {
@@ -133,16 +134,29 @@ export function createImportRepository(database: AppDatabase) {
       'UPDATE import_blobs SET failures = failures + 1, retry_at = ?, error = ? WHERE source_key = ? AND container = ? AND name = ?',
     ).run(retry, message, blob.source_key, blob.container, blob.name);
   }
+  /**
+   * Stores a chunk of records and moves the blob's checkpoint past it. Counts the records stored
+   * and the new requests that one of the `others` sources holds too: sources are meant to hold
+   * different logs, and reports would count those requests twice.
+   */
   function commitChunk(
     blob: BlobRow,
     rows: { offset: number; item: ParsedRecord }[],
     issues: { offset: number; hash: string; reason: string }[],
     offset: number,
     complete: boolean,
+    others: string[] = [],
   ) {
+    const elsewhere = others.length
+      ? db.prepare(
+          `SELECT 1 FROM request_facts WHERE source_key IN (${others.map(() => '?').join(',')})
+          AND resource_id = ? AND correlation_id = ? LIMIT 1`,
+        )
+      : null;
     return db
       .transaction(() => {
-        let imported = 0;
+        let imported = 0,
+          duplicates = 0;
         const start = rows.length
           ? Math.min(...rows.map((row) => row.offset), ...issues.map((issue) => issue.offset))
           : issues.length
@@ -150,7 +164,12 @@ export function createImportRepository(database: AppDatabase) {
             : offset;
         // Row and issue offsets all fall inside this range.
         issueRangeDelete.run(blob.source_key, blob.container, blob.name, start, offset);
-        for (const row of rows) imported += storeRecord(blob, row.offset, row.item);
+        for (const { offset, item } of rows) {
+          const first = storeRecord(blob, offset, item);
+          if (first === null) continue;
+          imported++;
+          if (first && elsewhere?.get(...others, item.resourceId, item.correlationId)) duplicates++;
+        }
         if (imported) database.markCostsDirty();
         for (const issue of issues)
           issueInsert.run(
@@ -170,7 +189,7 @@ export function createImportRepository(database: AppDatabase) {
           blob.container,
           blob.name,
         );
-        return imported;
+        return { imported, duplicates };
       })
       .immediate();
   }
@@ -197,16 +216,17 @@ export function createImportRepository(database: AppDatabase) {
   }
   function saveRun(source: string, run: ImportRun) {
     db.prepare(
-      `INSERT INTO import_runs (id,source_key,mode,started_at,finished_at,status,imported_records,downloaded_bytes,list_calls,read_calls,error_count,message,trigger,actor) VALUES (@id, @source, @mode, @startedAt, @finishedAt, @status, @importedRecords, @downloadedBytes, @listCalls, @readCalls, @errorCount, @message, @trigger, @actor)
+      `INSERT INTO import_runs (id,source_key,mode,started_at,finished_at,status,imported_records,downloaded_bytes,list_calls,read_calls,error_count,message,trigger,actor,duplicate_requests) VALUES (@id, @source, @mode, @startedAt, @finishedAt, @status, @importedRecords, @downloadedBytes, @listCalls, @readCalls, @errorCount, @message, @trigger, @actor, @duplicateRequests)
       ON CONFLICT(id) DO UPDATE SET finished_at = excluded.finished_at, status = excluded.status,
         imported_records = excluded.imported_records, downloaded_bytes = excluded.downloaded_bytes,
-        list_calls = excluded.list_calls, read_calls = excluded.read_calls, error_count = excluded.error_count, message = excluded.message`,
+        list_calls = excluded.list_calls, read_calls = excluded.read_calls, error_count = excluded.error_count, message = excluded.message,
+        duplicate_requests = excluded.duplicate_requests`,
     ).run({ ...run, source, trigger: run.trigger ?? null, actor: run.actor ?? null });
   }
   function runs(source: string): ImportRun[] {
     const current = db
       .prepare(
-        `SELECT id,mode,trigger,actor,started_at startedAt,finished_at finishedAt,status,imported_records importedRecords,downloaded_bytes downloadedBytes,list_calls listCalls,read_calls readCalls,error_count errorCount,message FROM import_runs WHERE source_key=? ORDER BY started_at DESC LIMIT 10`,
+        `SELECT id,mode,trigger,actor,started_at startedAt,finished_at finishedAt,status,imported_records importedRecords,downloaded_bytes downloadedBytes,list_calls listCalls,read_calls readCalls,error_count errorCount,message,duplicate_requests duplicateRequests FROM import_runs WHERE source_key=? ORDER BY started_at DESC LIMIT 10`,
       )
       .all(source) as ImportRun[];
     const history = database.logs.query({

@@ -70,7 +70,7 @@ export function createPlatformService(database: AppDatabase, settings: SettingsR
     for (const { source_key } of rows) {
       const runs = db
         .prepare(
-          "SELECT id,mode,trigger,actor,started_at startedAt,finished_at finishedAt,status,imported_records importedRecords,downloaded_bytes downloadedBytes,list_calls listCalls,read_calls readCalls,error_count errorCount,message FROM import_runs WHERE source_key=? AND status<>'running' ORDER BY started_at",
+          "SELECT id,mode,trigger,actor,started_at startedAt,finished_at finishedAt,status,imported_records importedRecords,downloaded_bytes downloadedBytes,list_calls listCalls,read_calls readCalls,error_count errorCount,message,duplicate_requests duplicateRequests FROM import_runs WHERE source_key=? AND status<>'running' ORDER BY started_at",
         )
         .all(source_key) as ImportRun[];
       for (const run of runs) {
@@ -82,7 +82,7 @@ export function createPlatformService(database: AppDatabase, settings: SettingsR
             level:
               run.status === 'failed'
                 ? 'error'
-                : run.status === 'partial' || run.status === 'interrupted'
+                : run.status === 'partial' || run.status === 'interrupted' || run.duplicateRequests
                   ? 'warning'
                   : 'info',
             action: run.trigger,
@@ -91,7 +91,7 @@ export function createPlatformService(database: AppDatabase, settings: SettingsR
                 ?.accountName ?? source_key,
             actor: run.actor ?? (run.trigger === 'scheduled' ? 'Scheduler' : ''),
             status: run.status,
-            details: `${run.mode === 'reconcile' ? 'reconciliation' : 'import'}; started=${run.startedAt}; records=${run.importedRecords}; bytes=${run.downloadedBytes}; errors=${run.errorCount}${run.message ? '; ' + run.message : ''}`,
+            details: `${run.mode === 'reconcile' ? 'reconciliation' : 'import'}; started=${run.startedAt}; records=${run.importedRecords}; bytes=${run.downloadedBytes}; errors=${run.errorCount}${run.duplicateRequests ? `; duplicates=${run.duplicateRequests}; 这些请求也存在于其他数据源，报表会重复统计，请检查是否把同一份诊断日志导出到了多个存储账户。` : ''}${run.message ? '; ' + run.message : ''}`,
             sourceKey: source_key,
             run,
           });

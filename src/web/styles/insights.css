@@ -128,8 +128,9 @@
   display: block;
   overflow: visible;
 }
-/* A card holding a filling chart or the heatmap lays out as a column so it can grow. */
-.card:has(> .chart.fill, > .heatmap) {
+/* A card holding a filling chart, the heatmap or a list filling the rest lays out as a column
+   so it can grow. */
+.card:has(> .chart.fill, > .heatmap, > .histogram, > .fill-viewport) {
   display: flex;
   flex-direction: column;
 }
@@ -138,6 +139,26 @@
   flex: 1 1 0;
   min-height: 200px;
 }
+/* Cards sharing a row: a 220px chart under a one-line legend. A longer legend takes its room
+   from the chart, and a long list scrolls inside its card. */
+.card.fixed-card {
+  height: 328px;
+}
+.fixed-card .chart.fill {
+  min-height: 160px;
+}
+/* A list filling the rest of a fixed-height card, scrolling inside it when it runs longer. */
+.fill-viewport {
+  flex: 1 1 0;
+}
+.table-viewport.fill-viewport {
+  max-height: none;
+}
+/* Rows with a list of calls keep five calls (61px each) in view. */
+.card.fixed-card.tall {
+  height: 389px;
+}
+
 /* Out of flow, so the drawing never holds the card open while the row shrinks. */
 .chart.fill > svg {
   position: absolute;
@@ -158,6 +179,14 @@
   fill: var(--accent);
   opacity: 0.07;
 }
+/* A time chart that a drag across selects a time range on. */
+.chart svg.brushable {
+  cursor: crosshair;
+}
+.chart-brush {
+  fill: var(--accent);
+  opacity: 0.14;
+}
 .chart-crosshair {
   stroke: #c5cedb;
   stroke-dasharray: 3 3;
@@ -172,8 +201,20 @@
 .chart-dot {
   fill: currentColor;
 }
+.chart-area {
+  stroke: none;
+}
+.chart-reference {
+  stroke-dasharray: 5 4;
+  stroke-width: 1.5;
+}
 .chart-point {
   fill-opacity: 0.55;
+}
+.chart-point.active {
+  fill-opacity: 1;
+  stroke: var(--surface);
+  stroke-width: 1.5;
 }
 .chart-empty-note {
   position: absolute;
@@ -184,10 +225,10 @@
   font-size: 12px;
   pointer-events: none;
 }
+/* Drawn on the page body and placed in window coordinates (see `Tooltip`). */
 .chart-tooltip {
-  position: absolute;
-  top: 4px;
-  z-index: 3;
+  position: fixed;
+  z-index: 25;
   min-width: 190px;
   padding: 10px 12px;
   border: 1px solid #e3e8f1;
@@ -208,6 +249,12 @@
   font-variant-numeric: tabular-nums;
   line-height: 1.7;
 }
+.chart-tooltip-row.part {
+  padding-left: 14px;
+  color: var(--secondary);
+  font-size: 11px;
+  line-height: 1.6;
+}
 .chart-tooltip-row.total {
   margin-top: 4px;
   padding-top: 4px;
@@ -224,11 +271,15 @@
   font-size: 12px;
   list-style: none;
 }
-.chart-legend b {
-  margin-left: 6px;
-  color: var(--text);
-  font-weight: 550;
-  font-variant-numeric: tabular-nums;
+.chart-legend.compact {
+  gap: 2px 10px;
+  margin: 0;
+  color: var(--secondary);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.chart-legend.compact .legend-swatch {
+  margin-right: 4px;
 }
 .legend-swatch {
   display: inline-block;
@@ -244,11 +295,13 @@
   height: 2px;
   vertical-align: 3px;
 }
+/* Fills the card like `.chart.fill`, down to 132px. */
 .histogram {
   display: flex;
+  flex: 1 1 0;
   align-items: flex-end;
   gap: 6px;
-  height: 132px;
+  min-height: 132px;
   margin-top: 10px;
 }
 .histogram-column {
@@ -261,15 +314,27 @@
   min-width: 0;
   height: 100%;
 }
-.histogram-column i {
-  display: block;
+.histogram-column.hovered {
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+/* Groups stacked from the bottom, sized by their share of the bin. */
+.histogram-stack {
+  display: flex;
+  flex-direction: column-reverse;
   width: 100%;
   min-height: 1px;
+  overflow: hidden;
   border-radius: 4px 4px 0 0;
   opacity: 0.85;
 }
+.histogram-stack i {
+  flex: 0 1 0;
+  min-height: 0;
+}
 .histogram-column b {
   font-size: 11px;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
   font-weight: 550;
 }
@@ -278,13 +343,68 @@
   font-size: 10.5px;
   white-space: nowrap;
 }
-.histogram-pair {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+/* A bin's lower bound, centred on the 6px gap before its bar. */
+.histogram-column .histogram-edge {
+  position: relative;
+  align-self: flex-start;
+  transform: translateX(calc(-50% - 3px));
 }
-.histogram-pair .card-subhead {
-  margin-top: 0;
+.histogram-edge-unit {
+  position: absolute;
+  left: 100%;
+  margin-left: 3px;
+}
+/* Bands as rows: name, figures and share above a bar as long as the band's share of the total,
+   stacked by group. */
+.band-bars {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+.band-bar {
+  display: grid;
+  gap: 6px;
+  margin: 0 -6px;
+  padding: 5px 6px 7px;
+  border-radius: 6px;
+}
+.band-bar.hovered {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+.band-bar-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12.5px;
+}
+.band-bar-head small {
+  margin-left: auto;
+  color: var(--secondary);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.band-bar-head b {
+  min-width: 46px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+}
+.band-bar-track {
+  display: block;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--surface-muted);
+}
+.band-bar-fill {
+  display: flex;
+  gap: 1px;
+  height: 100%;
+}
+.band-bar-fill i {
+  min-width: 0;
 }
 /* The seven day rows share the height the card row gives them. */
 .heatmap {
@@ -319,6 +439,10 @@
   border-radius: 3px;
   background: var(--surface-muted);
 }
+.heatmap-row i.hovered {
+  outline: 1.5px solid var(--accent);
+  outline-offset: 1px;
+}
 .heatmap-axis span:not(:first-child) {
   text-align: center;
 }
@@ -336,13 +460,6 @@
   height: 8px;
   border-radius: 4px;
   background: linear-gradient(90deg, var(--surface-muted), var(--blue));
-}
-.composition-bar {
-  display: flex;
-  height: 10px;
-  margin: 4px 0 12px;
-  overflow: hidden;
-  border-radius: 5px;
 }
 .call-list {
   margin: 0;
@@ -378,6 +495,16 @@
 .call-list b {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
+}
+/* A detail line runs under both the model and the value. */
+.call-list button.call-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0 12px;
+}
+.call-list .call-detail small {
+  grid-column: 1 / -1;
 }
 
 /* Requests: the table body scrolls under a frozen header; the page itself does not. */
@@ -573,27 +700,47 @@
   font-weight: 600;
   letter-spacing: 0.4px;
 }
+/* Token counts on the first row, times on the second; the duration takes the last two cells. */
 .drawer-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
   margin: 0;
   overflow: hidden;
   border: 1px solid var(--row-divider);
   border-radius: 10px;
+  background: var(--row-divider);
 }
 .drawer-metrics > div {
   display: grid;
   grid-row: span 2;
   grid-template-rows: subgrid;
   padding: 9px 12px;
-  border-right: 1px solid var(--row-divider);
-  border-bottom: 1px solid var(--row-divider);
+  background: var(--surface);
 }
-.drawer-metrics > div:nth-child(3n) {
-  border-right: 0;
+.drawer-metrics > .drawer-duration {
+  grid-column: span 2;
 }
-.drawer-metrics > div:nth-last-child(-n + 3) {
-  border-bottom: 0;
+/* The duration with its split bar beside it and the bar's legend underneath. */
+.drawer-duration dd {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 12px;
+}
+.time-split-bar {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+}
+.time-split-bar i {
+  min-width: 2px;
+}
+.drawer-duration .chart-legend {
+  grid-column: 1 / -1;
+  font-weight: 400;
 }
 .drawer-metrics dt {
   color: var(--secondary);

@@ -1,4 +1,7 @@
-/** A row of mutually exclusive options, such as a split or a metric switch. */
+/**
+ * A row of mutually exclusive options, such as a split or a metric switch. Every option keeps the
+ * width of its selected (bold) label, so choosing one never resizes the control.
+ */
 export function Segmented<T extends string>({
   label,
   value,
@@ -19,7 +22,9 @@ export function Segmented<T extends string>({
           aria-pressed={option.value === value}
           onClick={() => onChange(option.value)}
         >
-          {option.label}
+          <span className="segmented-label" data-label={option.label}>
+            {option.label}
+          </span>
         </button>
       ))}
     </div>

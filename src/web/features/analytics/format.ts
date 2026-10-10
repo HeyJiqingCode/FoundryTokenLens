@@ -37,14 +37,30 @@ export const ratio = (value: number | null | undefined, digits = 1) =>
 export function share(part: number | string | null, whole: number | string | null) {
   const value = Number(part ?? 0) / Number(whole ?? 0);
   if (!Number.isFinite(value)) return '—';
-  return value > 0 && value < 0.001 ? '<0.1%' : ratio(value);
+  if (value > 0 && value < 0.001) return '<0.1%';
+  return value < 1 && value > 0.999 ? '>99.9%' : ratio(value);
 }
+/** A duration in ms below a second, in s from there; zero reads 0 s, like the axis ticks above it. */
 export const latency = (value: number | null | undefined) =>
   value === null || value === undefined
     ? '—'
-    : value >= 1000
-      ? `${(value / 1000).toFixed(value >= 10000 ? 1 : 2)} s`
-      : `${Math.round(value)} ms`;
+    : value === 0
+      ? '0 s'
+      : value >= 1000
+        ? `${(value / 1000).toFixed(value >= 10000 ? 1 : 2)} s`
+        : `${Math.round(value)} ms`;
+/** Output tokens per second without the unit; one decimal below 100 unless whole. */
+export const speedNumber = (value: number | null | undefined) =>
+  value === null || value === undefined
+    ? '—'
+    : value >= 100 || Number.isInteger(value)
+      ? String(Math.round(value))
+      : value.toFixed(1);
+/** Generation speed in output tokens per second. */
+export const speed = (value: number | null | undefined) =>
+  value === null || value === undefined
+    ? '—'
+    : `${speedNumber(value)} ${t('insights.tokensPerSecond')}`;
 export const count = (value: number | null | undefined) =>
   value === null || value === undefined ? '—' : Math.round(value).toLocaleString(getLocale());
 export function bytes(value: string | number | null | undefined) {
@@ -68,6 +84,17 @@ export const callTimeFormat = (locale: string, timeZone: string) =>
   });
 /** Number of calls with its unit, e.g. "1,234 次". */
 export const callCount = (value: number) => t('insights.callCount', { count: value });
+/**
+ * Number of calls for narrow columns: from 1,000 in the locale's short form where it has one
+ * ("1.5K calls"), otherwise in full ("1,504 次").
+ */
+export function shortCallCount(value: number) {
+  const short = new Intl.NumberFormat(getLocale(), {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value);
+  return t('insights.callCount', { count: /\d$/.test(short) ? count(value) : short });
+}
 /** A calendar date such as 2026-09-24, e.g. "Sep 24, 2026". */
 export const calendarDay = (date: string, locale: string) =>
   new Intl.DateTimeFormat(locale, { timeZone: 'UTC', dateStyle: 'medium' }).format(

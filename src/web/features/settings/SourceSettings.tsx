@@ -83,8 +83,8 @@ export function SourceSettings({
                   </td>
                   <td>
                     {source.authMode === 'managed_identity'
-                      ? 'Managed Identity'
-                      : 'Connection String'}
+                      ? 'Managed identity'
+                      : 'Connection string'}
                   </td>
                   <td>
                     <EnabledPill enabled={source.enabled} />

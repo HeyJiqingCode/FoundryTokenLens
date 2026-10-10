@@ -217,12 +217,12 @@ export function SourceEditorDialog({
                     setNotice(null);
                   }}
                 >
-                  <option value="connection_string">Connection String</option>
-                  <option value="managed_identity">Managed Identity</option>
+                  <option value="connection_string">Connection string</option>
+                  <option value="managed_identity">Managed identity</option>
                 </select>
               </Field>
               {mode === 'connection_string' ? (
-                <Field label="Connection String">
+                <Field label="Connection string">
                   <SecretInput
                     name="connectionString"
                     value={credential}

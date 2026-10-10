@@ -1,29 +1,28 @@
-import { Boxes, ChartColumn, ChartLine, HeartPulse, ReceiptText, Wallet } from 'lucide-react';
+import { Boxes, ChartColumn, ChartLine, HeartPulse, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { t, useLocale, type DisplayMessage } from '../../i18n';
 import type { AnalyticsResponse } from '../../../shared/analytics';
 import { ChartLegend, TimeBarChart, TimeLineChart } from '../analytics/charts';
-import { count, latency, money, ratio, tokens } from '../analytics/format';
+import { callCount, count, latency, money, ratio, tokens } from '../analytics/format';
 import {
   byCost,
   displayName,
   errorRate,
   latencyLines,
   rowFilter,
-  seriesTotal,
   statusSeries,
   summaryTokens,
   metricFormat,
   metricLabel,
   overallTitle,
   timeAxis,
+  stackSeries,
   totalSeries,
   type FilterField,
   type Metric,
 } from '../analytics/series';
 import {
-  CallList,
   CardLink,
   ErrorRate,
   Comparison,
@@ -33,10 +32,13 @@ import {
   ShareBar,
   ViewAll,
   METRIC_TONE,
+  callsValue,
 } from '../analytics/ui';
 import { Kpi, KpiStrip } from '../../components/Kpi';
 import { Card } from '../../components/Card';
+import { ScrollViewport } from '../../components/ScrollViewport';
 import { Segmented } from '../../components/Segmented';
+import { TopCostCard } from '../analytics/cards';
 
 const METRICS = ['cost', 'requests', 'tokens'] as const;
 
@@ -62,7 +64,7 @@ export function OverviewPage({
   const total = totalSeries(analytics, metric);
   const format = metricFormat(metric);
   const errors = statusSeries(analytics);
-  const latencyTrend = latencyLines(analytics, true);
+  const durationLines = latencyLines(analytics);
   const go = (path: string) => navigate(`${path}${location.search}`);
   const models = [...analytics.models].sort(byCost);
   const common = timeAxis(analytics);
@@ -86,8 +88,8 @@ export function OverviewPage({
             }
           />
           <Kpi
-            label={t('insights.callsCount')}
-            value={count(s.requests)}
+            label={t('insights.calls')}
+            value={callsValue(s.requests)}
             sub={
               c && <Comparison current={s.requests} previous={c.requests} format={count} compact />
             }
@@ -174,6 +176,7 @@ export function OverviewPage({
           <TimeBarChart
             {...common}
             series={total}
+            details={stackSeries(analytics, 'resource', metric)}
             format={format}
             label={totalTitle}
             height="fill"
@@ -189,25 +192,23 @@ export function OverviewPage({
             </CardLink>
           }
         >
-          <h3 className="card-subhead">{t('insights.errorsCount')}</h3>
-          <ChartLegend
-            items={errors.map((series) => ({ ...series, value: count(seriesTotal(series)) }))}
-          />
+          <h3 className="card-subhead">{t('insights.errors')}</h3>
+          <ChartLegend items={errors} />
           <TimeBarChart
             {...common}
             series={errors}
-            format={count}
-            label={t('insights.errorsCount')}
+            format={callCount}
+            label={t('insights.errors')}
             height={120}
           />
           <h3 className="card-subhead">{t('insights.latency')}</h3>
-          <ChartLegend items={latencyTrend} />
+          <ChartLegend items={durationLines} />
           <TimeLineChart
             {...common}
             height={120}
             label={t('insights.latency')}
             format={latency}
-            lines={latencyTrend}
+            lines={durationLines}
           />
         </Card>
       </div>
@@ -216,63 +217,59 @@ export function OverviewPage({
           title={t('insights.models')}
           icon={Boxes}
           tone="violet"
+          className="fixed-card tall"
           actions={
             <CardLink onClick={() => go('/analysis/cost')}>
               {t('insights.viewInAnalysis')} →
             </CardLink>
           }
         >
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>{t('insights.filterModel')}</th>
-                <th>{t('insights.calls')}</th>
-                <th>{t('insights.cost')}</th>
-                <th>{t('insights.costShare')}</th>
-                <th>{t('insights.tokens')}</th>
-                <th>{t('insights.cacheHit')}</th>
-                <th>{t('insights.errorRate')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {models.map((row) => (
-                <tr key={row.name}>
-                  <td>
-                    <EntityName
-                      name={displayName('model', row.name)}
-                      onSelect={rowFilter('model', row.name, onFilter)}
-                    />
-                  </td>
-                  <td>{count(row.requests)}</td>
-                  <td>{row.costUsd === null ? <Muted /> : money(row.costUsd)}</td>
-                  <td>
-                    <ShareBar
-                      value={row.costUsd === null ? null : Number(row.costUsd)}
-                      total={cost}
-                    />
-                  </td>
-                  <td>{tokens(summaryTokens(row))}</td>
-                  <td>{ratio(row.cacheRatio)}</td>
-                  <td>
-                    <ErrorRate value={errorRate(row)} />
-                  </td>
+          <ScrollViewport
+            className="table-viewport fill-viewport"
+            label={t('insights.models')}
+            showScrollbar={false}
+          >
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>{t('insights.filterModel')}</th>
+                  <th>{t('insights.calls')}</th>
+                  <th>{t('insights.cost')}</th>
+                  <th>{t('insights.costShare')}</th>
+                  <th>{t('insights.tokens')}</th>
+                  <th>{t('insights.cacheHit')}</th>
+                  <th>{t('insights.errorRate')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {models.map((row) => (
+                  <tr key={row.name}>
+                    <td>
+                      <EntityName
+                        name={displayName('model', row.name)}
+                        onSelect={rowFilter('model', row.name, onFilter)}
+                      />
+                    </td>
+                    <td>{count(row.requests)}</td>
+                    <td>{row.costUsd === null ? <Muted /> : money(row.costUsd)}</td>
+                    <td>
+                      <ShareBar
+                        value={row.costUsd === null ? null : Number(row.costUsd)}
+                        total={cost}
+                      />
+                    </td>
+                    <td>{tokens(summaryTokens(row))}</td>
+                    <td>{ratio(row.cacheRatio)}</td>
+                    <td>
+                      <ErrorRate value={errorRate(row)} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </ScrollViewport>
         </Card>
-        <Card
-          title={t('insights.topCostCalls')}
-          icon={ReceiptText}
-          tone="amber"
-          actions={<ViewAll onClick={() => go('/requests')} />}
-        >
-          <CallList
-            rows={analytics.topCosts?.slice(0, 5) ?? []}
-            timeZone={analytics.timezone}
-            value={(row) => money(row.cost?.knownUsd)}
-          />
-        </Card>
+        <TopCostCard data={analytics} actions={<ViewAll onClick={() => go('/requests')} />} />
       </div>
     </div>
   );

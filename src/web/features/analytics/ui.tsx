@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import type { RequestFact } from '../../../shared/ingestion';
+import type { CallRow } from '../../../shared/analytics';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import type { Tone } from '../../components/Card';
-import { systemMessage, t, useLocale, type DisplayMessage } from '../../i18n';
-import { callTimeFormat, latency, ratio, tokens } from './format';
+import { getLocale, systemMessage, t, useLocale, type DisplayMessage } from '../../i18n';
+import { callTimeFormat, count, latency, ratio, tokens } from './format';
 
 /** Subject colors shared by titles and charts: cost, calls and tokens. */
 export const METRIC_TONE: Record<'cost' | 'requests' | 'tokens', Tone> = {
@@ -23,8 +24,11 @@ export function ReportPlaceholder({ error }: { error?: DisplayMessage | null }) 
   );
 }
 
-/** `cost` marks increases for attention, `risk` marks them as bad; `neutral` carries no judgement. */
-type ChangeKind = 'neutral' | 'cost' | 'risk';
+/**
+ * `cost` marks increases for attention, `risk` marks them as bad, `gain` marks them as good and
+ * decreases as bad; `neutral` carries no judgement.
+ */
+type ChangeKind = 'neutral' | 'cost' | 'risk' | 'gain';
 
 /** Relative change against the previous equal-length window; no change stays neutral. */
 function Delta({
@@ -41,11 +45,15 @@ function Delta({
   const tone =
     kind === 'neutral' || change === 0
       ? 'neutral'
-      : change < 0
-        ? 'good'
-        : kind === 'cost'
-          ? 'attention'
-          : 'bad';
+      : kind === 'gain'
+        ? change > 0
+          ? 'good'
+          : 'bad'
+        : change < 0
+          ? 'good'
+          : kind === 'cost'
+            ? 'attention'
+            : 'bad';
   const Icon = change > 0 ? ArrowUp : change < 0 ? ArrowDown : null;
   return (
     <span className={`delta delta-${tone}`}>
@@ -133,6 +141,27 @@ export function EntityName({
   );
 }
 
+/** A KPI figure with a unit set smaller beside it, such as 次 or Token/s; '—' stays bare. */
+export const unitValue = (text: string, unit: string): ReactNode =>
+  text === '—' ? (
+    text
+  ) : (
+    <>
+      {text}
+      <small className="kpi-unit">{unit}</small>
+    </>
+  );
+/** A number of calls as a KPI figure; the unit takes the locale's singular for one call. */
+export const callsValue = (value: number | null | undefined) =>
+  unitValue(
+    count(value),
+    t(
+      new Intl.PluralRules(getLocale()).select(Math.round(value ?? 0)) === 'one'
+        ? 'insights.callUnitOne'
+        : 'insights.callUnit',
+    ),
+  );
+
 export const Muted = ({ children = '—' }: { children?: ReactNode }) => (
   <span className="muted">{children}</span>
 );
@@ -166,17 +195,21 @@ export function withRequest(
   return query;
 }
 
-/** Compact call list that opens the request drawer on the requests page. */
+/**
+ * Compact call list that opens the request drawer on the requests page. Under each call's model
+ * is its time with input tokens and duration; a `detail` line replaces it and, being longer, runs
+ * under the value too, which then sits beside the model.
+ */
 export function CallList({
   rows,
   timeZone,
   value,
   detail,
 }: {
-  rows: RequestFact[];
+  rows: CallRow[];
   timeZone: string;
-  value: (row: RequestFact) => string;
-  detail?: (row: RequestFact) => string;
+  value: (row: CallRow) => string;
+  detail?: (row: CallRow) => string;
 }) {
   const locale = useLocale();
   const navigate = useNavigate();
@@ -189,6 +222,7 @@ export function CallList({
         <li key={`${row.resourceId}/${row.correlationId}`}>
           <button
             type="button"
+            className={detail ? 'call-detail' : undefined}
             aria-label={t('insights.openRequest', { id: row.correlationId })}
             onClick={() => {
               const query = withRequest(location.search, row);
@@ -196,16 +230,23 @@ export function CallList({
               navigate(`/requests?${query}`);
             }}
           >
-            <span>
-              <strong className="link-name">{row.model ?? row.operation ?? '—'}</strong>
-              <small>
-                {time.format(new Date(row.time))} ·{' '}
-                {detail
-                  ? detail(row)
-                  : `${t('insights.input')} ${tokens(row.inputTokens)} · ${latency(row.durationMs)}`}
-              </small>
-            </span>
-            <b>{value(row)}</b>
+            {detail ? (
+              <>
+                <strong className="link-name">{row.model ?? row.operation ?? '—'}</strong>
+                <b>{value(row)}</b>
+                <small>{detail(row)}</small>
+              </>
+            ) : (
+              <>
+                <span>
+                  <strong className="link-name">{row.model ?? row.operation ?? '—'}</strong>
+                  <small>
+                    {`${time.format(new Date(row.time))} · ${t('insights.input')} ${tokens(row.inputTokens)} · ${latency(row.durationMs)}`}
+                  </small>
+                </span>
+                <b>{value(row)}</b>
+              </>
+            )}
           </button>
         </li>
       ))}

@@ -88,6 +88,11 @@ export function createImportWorker(
     run: ImportRun,
     signal: AbortSignal,
   ) {
+    // Only the enabled sources' requests are reported, so only they can be counted twice.
+    const others = settings
+      .getSources()
+      .filter((item) => item.enabled && item.id !== source.id)
+      .map(sourceKey);
     const sameGeneration =
       blob.created_on !== null && blob.created_on === blob.checkpoint_created_on;
     // Resuming across ETags is safe only for the same append-blob generation.
@@ -137,14 +142,18 @@ export function createImportWorker(
     }
     ensureCurrent(source, signal);
     const complete = offset + consumed === blob.size && !tailPending;
-    if (consumed > 0 || complete)
-      run.importedRecords += repository.commitChunk(
+    if (consumed > 0 || complete) {
+      const committed = repository.commitChunk(
         blob,
         rows,
         issues,
         offset + consumed,
         complete,
+        others,
       );
+      run.importedRecords += committed.imported;
+      run.duplicateRequests += committed.duplicates;
+    }
     if (issues.length) {
       run.errorCount += issues.length;
       run.message = '部分日志行无法解析，已保留来源位置；其余有效记录继续导入。';
@@ -294,6 +303,7 @@ export function createImportWorker(
       readCalls: 0,
       errorCount: 0,
       message: null,
+      duplicateRequests: 0,
     });
     const first = createRun();
     activeRun = first;
@@ -404,33 +414,24 @@ export function createImportWorker(
       counts: repository.counts(sourceKey(source), source.containers),
     }));
     const counts = {
-      requestCount: 0,
+      // Each source holds its own requests, so the total is their sum.
+      requestCount: totals.reduce((sum, item) => sum + item.counts.requestCount, 0),
       resourceCount: 0,
       issueCount: totals.reduce((sum, item) => sum + item.counts.issueCount, 0),
       pendingBlobs: totals.reduce((sum, item) => sum + item.counts.pendingBlobs, 0),
       pendingScans: totals.reduce((sum, item) => sum + item.counts.pendingScans, 0),
     };
     const keys = totals.map((item) => item.key);
-    if (keys.length === 1) {
-      counts.requestCount = totals[0].counts.requestCount;
-      counts.resourceCount = totals[0].counts.resourceCount;
-    } else if (keys.length > 1) {
-      const placeholders = keys.map(() => '?').join(',');
-      counts.requestCount = (
-        database.connection
-          .prepare(
-            `SELECT count(*) n FROM (SELECT 1 FROM request_facts WHERE source_key IN (${placeholders}) AND is_inference=1 GROUP BY resource_id,correlation_id)`,
-          )
-          .get(...keys) as { n: number }
-      ).n;
+    // A resource listed by several sources counts once.
+    if (keys.length === 1) counts.resourceCount = totals[0].counts.resourceCount;
+    else if (keys.length > 1)
       counts.resourceCount = (
         database.connection
           .prepare(
-            `SELECT count(DISTINCT resource_id) n FROM import_blobs WHERE source_key IN (${placeholders})`,
+            `SELECT count(DISTINCT resource_id) n FROM import_blobs WHERE source_key IN (${keys.map(() => '?').join(',')})`,
           )
           .get(...keys) as { n: number }
       ).n;
-    }
     return {
       dataRevision: JSON.stringify([database.instanceId, database.dataRevision(), keys]),
       configured: sources.length > 0,

@@ -14,6 +14,7 @@ import { TOP_SOURCE_IPS, type AnalyticsResponse } from '../../../shared/analytic
 import { ChartLegend, TimeBarChart, WeekHourHeatmap } from '../analytics/charts';
 import {
   calendarDay,
+  callCount,
   count,
   hourLabel,
   latency,
@@ -29,20 +30,25 @@ import {
   groupLabel,
   groupOptions,
   groupRows,
+  overallTitle,
   peakDay,
   rangeDays,
   rowFilter,
-  seriesTotal,
-  splitOptions,
   stackSeries,
   summaryTokens,
   timeAxis,
-  totalSeries,
-  overallTitle,
   type FilterField,
   type StackBy,
 } from '../analytics/series';
-import { Comparison, EntityName, ErrorRate, Muted, ShareBar } from '../analytics/ui';
+import {
+  Comparison,
+  EntityName,
+  ErrorRate,
+  METRIC_TONE,
+  Muted,
+  ShareBar,
+  callsValue,
+} from '../analytics/ui';
 import { Kpi, KpiStrip } from '../../components/Kpi';
 import { Card } from '../../components/Card';
 import { Segmented } from '../../components/Segmented';
@@ -55,13 +61,12 @@ export function DistributionView({
   onFilter: (field: FilterField, value: string) => void;
 }) {
   const locale = useLocale();
-  const [split, setSplit] = useState<StackBy | 'none'>('resource');
+  const [split, setSplit] = useState<StackBy>('model');
   const [group, setGroup] = useState<StackBy>('model');
   const s = data.summary,
     c = data.comparison;
   const days = rangeDays(data);
-  const series =
-    split === 'none' ? totalSeries(data, 'requests') : stackSeries(data, split, 'requests');
+  const series = stackSeries(data, split, 'requests');
   const peak = [...(data.heatmap ?? [])].sort((a, b) => b.requests - a.requests)[0];
   const peakCalls = peakDay(data, 'requests');
   const ips = data.ips;
@@ -75,17 +80,17 @@ export function DistributionView({
     <>
       <KpiStrip>
         <Kpi
-          label={t('insights.callsCount')}
+          label={t('insights.calls')}
           icon={Zap}
           tone="blue"
-          value={count(s.requests)}
+          value={callsValue(s.requests)}
           sub={c && <Comparison current={s.requests} previous={c.requests} format={count} />}
         />
         <Kpi
           label={t('insights.dailyCalls')}
           icon={CalendarDays}
           tone="blue"
-          value={days ? count(s.requests / days) : '—'}
+          value={days ? callsValue(s.requests / days) : '—'}
           sub={
             peakCalls && (
               <span title={calendarDay(peakCalls.date, locale)}>
@@ -99,7 +104,7 @@ export function DistributionView({
           icon={Clock}
           tone="blue"
           value={peak ? `${weekdayName(peak.day, locale)} ${hourLabel(peak.hour)}` : '—'}
-          sub={peak && `${count(peak.requests)} · ${data.timezone}`}
+          sub={peak && `${callCount(peak.requests)} · ${data.timezone}`}
         />
         <Kpi
           label={t('insights.resources')}
@@ -119,30 +124,27 @@ export function DistributionView({
       <Card
         title={overallTitle('requests')}
         icon={ChartColumnStacked}
-        tone="blue"
+        tone={METRIC_TONE.requests}
         actions={
           <Segmented
             label={t('insights.split')}
             value={split}
-            options={splitOptions()}
+            options={groupOptions()}
             onChange={setSplit}
           />
         }
       >
-        <ChartLegend items={series.map((item) => ({ ...item, value: count(seriesTotal(item)) }))} />
+        <ChartLegend items={series} />
         <TimeBarChart
           {...timeAxis(data)}
           series={series}
-          format={count}
-          label={overallTitle('requests')}
+          format={callCount}
+          label={t('insights.calls')}
         />
       </Card>
       <div className="card-row wide-narrow">
         <Card title={t('insights.weekdayHour')} icon={CalendarClock} tone="blue">
-          <WeekHourHeatmap
-            cells={data.heatmap ?? []}
-            describe={(day, hour, requests) => `${day} ${hourLabel(hour)} · ${count(requests)}`}
-          />
+          <WeekHourHeatmap cells={data.heatmap ?? []} />
         </Card>
         <Card title={t('insights.sourceIps', { count: TOP_SOURCE_IPS })} icon={Network} tone="teal">
           <ScrollViewport

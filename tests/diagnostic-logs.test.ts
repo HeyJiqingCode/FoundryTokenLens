@@ -117,6 +117,44 @@ test('real 429 shape: zero-duration 200 is kept as evidence, substantive 429 dri
   assert.equal(merged.durationMs, null);
 });
 
+test('a placeholder-only response takes its duration from the last token, or none without one', () => {
+  const placeholder = parseRecord(
+    JSON.stringify(response('placeholder', 0, 200)),
+    'requests',
+    resource,
+  )[0];
+  const timed = parseRecord(
+    JSON.stringify(usage('placeholder', { timeToFirstTokenMs: 700, timeToLastTokenMs: 4200 })),
+    'usage',
+    resource,
+  )[0];
+  assert.equal(mergeRequestRecords([placeholder, timed]).durationMs, 4200);
+  const alone = mergeRequestRecords([placeholder]);
+  assert.equal(alone.responsePlaceholder, true);
+  assert.equal(alone.durationMs, null);
+});
+
+test('calls are dated by their start, logged as ticks since 1970 or since year 1, else by the log time', () => {
+  const started = Date.UTC(2026, 8, 20, 1, 59, 50);
+  const record = (requestTime: number) =>
+    parseRecord(
+      JSON.stringify({
+        ...response('started', 10000, 200),
+        properties: { promptTokens: 120, completionTokens: 30, requestTime },
+      }),
+      'requests',
+      resource,
+    )[0];
+  for (const ticks of [started * 1e4, (started + 62135596800000) * 1e4]) {
+    const fact = mergeRequestRecords([record(ticks)]);
+    assert.equal(fact.time, new Date(started).toISOString());
+    assert.equal(fact.timeSource, 'start');
+  }
+  const unknown = mergeRequestRecords([record(0)]);
+  assert.equal(unknown.time, response('started').time);
+  assert.equal(unknown.timeSource, 'event');
+});
+
 test('late Usage enriches one request and billing, exact duplicate locations survive, RR quantities never supply usage', async (t) => {
   const f = fixture(t),
     r = response('later', 100, 200);
@@ -327,77 +365,6 @@ test('field view retains unknown, null, empty, scalar-array differences, and sou
   assert.equal(result.find((f) => f.path === 'properties.promptTokens')?.values.length, 2);
   assert.equal(result.find((f) => f.path === 'properties.custom')?.values.length, 2);
   assert.equal(result.find((f) => f.path === 'properties.unknown.flag')?.values[0].value, false);
-});
-
-test('cross-source Usage and RequestResponse join before status filtering and cost evaluation', async (t) => {
-  const f = fixture(t);
-  const endpoint = 'https://second.blob.core.windows.net';
-  const second = f.settings.saveSource(
-    { authMode: 'connection_string', containers: LOG_CONTAINERS.map((x) => x.name) },
-    {
-      authMode: 'connection_string',
-      connectionString: 'second',
-      endpoint: '',
-      managedIdentityClientId: '',
-    },
-    {
-      accountName: 'second',
-      endpoint,
-      containers: [...LOG_CONTAINERS],
-      verifiedAt: new Date().toISOString(),
-    },
-    'test',
-  );
-  const reader2 = new SyntheticBlobReader();
-  f.reader.put(LOG_CONTAINERS[0].name, path(), [
-    {
-      ...usage('cross', { promptTokens: 1000, cachedTokens: 500, generatedTokens: 10 }),
-      time: '2026-09-20T02:05:00.000Z',
-    },
-  ]);
-  f.reader.put(LOG_CONTAINERS[1].name, path(), [response('cross', 0, 200)]);
-  reader2.put(LOG_CONTAINERS[1].name, path(), [response('cross', 900, 429)]);
-  await f.worker.stop();
-  const worker = createImportWorker(
-    f.db,
-    f.settings,
-    (source) => (source.connectionString === 'second' ? reader2 : f.reader),
-    () => new Date('2026-09-29T00:00:00Z'),
-  );
-  try {
-    worker.request('scan');
-    await worker.settled();
-    f.settings.addPrice(
-      {
-        model: 'synthetic-model',
-        modelVersion: '*',
-        region: '*',
-        deploymentType: '*',
-        validFrom: null,
-        validTo: null,
-        notes: '',
-        items: [{ key: 'input', label: 'Input', unitQuantity: 1000000, unitPriceUsd: '1' }],
-      },
-      'test',
-    );
-    const all = f.analytics.requests({});
-    assert.equal(all.total, 1);
-    assert.equal(all.requests[0].linkState, 'linked');
-    assert.equal(all.requests[0].statusCode, 429);
-    assert.equal(all.requests[0].time, '2026-09-20T02:05:00.000Z');
-    assert.equal(
-      f.analytics.requests({ from: '2026-09-20T02:04:00Z', to: '2026-09-20T02:06:00Z' }).total,
-      1,
-    );
-    assert.equal(f.analytics.requests({ to: '2026-09-20T02:04:00Z' }).total, 0);
-    assert.equal(all.requests[0].cost?.knownUsd, '0.0005');
-    assert.equal(f.analytics.requests({ status: '429' }).total, 1);
-    f.settings.setSourceEnabled(second.id, false, 'test');
-    assert.equal(f.analytics.requests({}).requests[0].statusCode, 200);
-    assert.equal(f.analytics.requests({}).requests[0].responsePlaceholder, true);
-  } finally {
-    await worker.stop();
-  }
 });
 
 test('an incomplete old tail retains its offset without blocking discovery of later time windows', async (t) => {

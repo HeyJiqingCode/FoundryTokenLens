@@ -10,6 +10,7 @@ import { createImportWorker } from '../src/server/ingestion/worker.js';
 import { createAnalyticsService } from '../src/server/analytics/service.js';
 import { createPricingService } from '../src/server/pricing/service.js';
 import { createSourceStatistics } from '../src/server/settings/source-statistics.js';
+import { createPlatformService } from '../src/server/platform/service.js';
 import { buildApp } from '../src/server/app.js';
 import { LOG_CONTAINERS } from '../src/shared/settings.js';
 import {
@@ -22,7 +23,7 @@ import {
 } from './fixtures/diagnostics.js';
 import { testApp, requestHeaders, login, setupAdmin } from './helpers.js';
 
-test('two enabled Blob sources import and price independently while reports deduplicate the same request', async (t) => {
+test('two enabled Blob sources import and price independently; a request both hold counts twice and warns', async (t) => {
   const directory = mkdtempSync(join(tmpdir(), 'ftl-multi-source-'));
   const db = openDatabase(directory);
   const settings = createSettingsRepository(db, createSecretStore(directory));
@@ -70,8 +71,26 @@ test('two enabled Blob sources import and price independently while reports dedu
   worker.request('scan');
   await worker.settled();
   assert.equal(settings.getSources().length, 2);
-  assert.equal(worker.status().requestCount, 4);
+  // Sources hold separate logs: 'shared' is stored, priced and counted once in each.
+  assert.equal(worker.status().requestCount, 5);
   assert.equal(worker.status().runs.length, 2);
+  // Whichever source imports 'shared' second finds it in the other and records it.
+  assert.deepEqual(
+    worker
+      .status()
+      .runs.map((run) => run.duplicateRequests)
+      .sort(),
+    [0, 1],
+  );
+  const logs = createPlatformService(db, settings).logs({
+    category: 'task',
+    limit: 10,
+    offset: 0,
+  }).logs;
+  const warned = logs.filter((log) => log.level === 'warning');
+  assert.equal(warned.length, 1);
+  assert.match(warned[0].details, /duplicates=1/);
+  assert.equal(logs.filter((log) => log.level === 'info').length, 1);
   assert.equal(
     (db.connection.prepare('SELECT count(*) n FROM request_facts').get() as { n: number }).n,
     5,
@@ -95,9 +114,10 @@ test('two enabled Blob sources import and price independently while reports dedu
   );
   assert.equal(pricing.recalculate(20), 5);
   const analytics = createAnalyticsService(db, settings);
-  assert.equal(analytics.report({}).summary.requests, 4);
-  assert.equal(analytics.requests({}, 25).total, 4);
-  assert.equal(analytics.report({}).summary.costUsd, '0.000924');
+  assert.equal(analytics.report({}).summary.requests, 5);
+  assert.equal(analytics.requests({}, 25).total, 5);
+  // Five priced copies of the same Usage shape: 110 input, 10 cache read and 30 output tokens each.
+  assert.equal(analytics.report({}).summary.costUsd, '0.001155');
   const statistics = createSourceStatistics(db, settings, (resolved) =>
     readers.get(resolved.connectionString)!,
   );
@@ -106,6 +126,16 @@ test('two enabled Blob sources import and price independently while reports dedu
   save('second', false, two.id);
   assert.equal(worker.status().requestCount, 3);
   assert.equal(analytics.report({}).summary.requests, 3);
+  // A disabled source is left out of the reports, so a request it also holds is no duplicate:
+  // the first source's new run finds none.
+  const duplicates = () =>
+    worker.status().runs.reduce((sum, run) => sum + run.duplicateRequests, 0);
+  const before = duplicates();
+  readers.get('first')!.put(containers[0], path('02', '21'), [usage('two')]);
+  worker.request('scan');
+  await worker.settled();
+  assert.equal(worker.status().runs.length, 2);
+  assert.equal(duplicates(), before);
   settings.deleteSource(one.id, 'test');
   assert.equal(analytics.report({}).summary.requests, 0);
   assert.equal(

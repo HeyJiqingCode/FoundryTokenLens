@@ -26,7 +26,7 @@ export default {
   'pricing.choosePrefillPrice': '选择价格',
 
   'pricing.enterPrice': '请至少填写一项单价。',
-  'pricing.enterLongPrice': '请至少填写一项 Long context 单价。',
+  'pricing.enterLongPrice': '请至少填写一项长上下文单价。',
   'pricing.chooseStartTime': '请选择生效时间。',
   'pricing.unitPrices': '单价',
   'pricing.startTime': '生效时间',

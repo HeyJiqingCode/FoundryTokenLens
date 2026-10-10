@@ -7,7 +7,8 @@ export interface RequestFact {
   resourceId: string;
   correlationId: string;
   time: string;
-  timeSource?: 'event' | 'ingestion';
+  /** `start`: when the call was received; `event`: when its log was written, about when it ended. */
+  timeSource?: 'start' | 'event' | 'ingestion';
   model: string | null;
   modelVersion: string | null;
   deployment: string | null;
@@ -58,6 +59,8 @@ export interface ImportRun {
   readCalls: number;
   errorCount: number;
   message: string | null;
+  /** Requests this run imported that another data source holds too, so reports count them twice. */
+  duplicateRequests: number;
 }
 
 export interface IngestionStatus {

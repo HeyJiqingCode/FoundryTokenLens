@@ -8,9 +8,16 @@ import { createSecretStore } from '../src/server/security/secrets.js';
 import { createSettingsRepository } from '../src/server/settings/repository.js';
 import { createImportWorker } from '../src/server/ingestion/worker.js';
 import { createPricingService } from '../src/server/pricing/service.js';
-import { createAnalyticsService } from '../src/server/analytics/service.js';
+import {
+  createAnalyticsService,
+  lowestCache,
+  monthForecast,
+} from '../src/server/analytics/service.js';
 import { csvCell } from '../src/server/analytics/routes.js';
 import { moneyUnits } from '../src/server/pricing/money.js';
+import { accumulator } from '../src/server/analytics/aggregate.js';
+import { BINNED_MEASURES } from '../src/shared/analytics.js';
+import type { RequestFact } from '../src/shared/ingestion.js';
 import { LOG_CONTAINERS } from '../src/shared/settings.js';
 import {
   SyntheticBlobReader,
@@ -92,7 +99,61 @@ test('analytics weights cache by tokens and computes P95 from requests', async (
   assert.equal(all.summary.cachedTokens, '640');
   assert.equal(all.summary.cacheRatio, 0.228571);
   assert.equal(all.summary.p95DurationMs, 10);
-  assert.equal(all.summary.averageDurationMs, 59.5);
+  assert.equal(all.slowest?.duration.length, 19);
+  // Each resource's models add up to the resource: overall, in every bucket and in every bin.
+  for (const resource of all.resources) {
+    const pairs = (rows: { resource: string }[] | undefined) =>
+      (rows ?? []).filter((row) => row.resource === resource.name);
+    const models = pairs(all.resourceModels) as NonNullable<typeof all.resourceModels>;
+    assert.equal(
+      models.reduce((sum, row) => sum + row.requests, 0),
+      resource.requests,
+    );
+    const stacked = pairs(all.stacks?.pairs) as NonNullable<
+      NonNullable<typeof all.stacks>['pairs']
+    >;
+    for (const point of all.stacks!.resource.find((g) => g.name === resource.name)!.points)
+      assert.equal(
+        stacked.reduce(
+          (sum, pair) => sum + (pair.points.find((p) => p.i === point.i)?.requests ?? 0),
+          0,
+        ),
+        point.requests,
+      );
+    const binned = pairs(all.measureBins?.pairs) as NonNullable<
+      NonNullable<typeof all.measureBins>['pairs']
+    >;
+    const bins = all.measureBins!.resource.find((g) => g.name === resource.name)!;
+    for (const measure of BINNED_MEASURES)
+      bins.counts[measure].forEach((count, i) =>
+        assert.equal(
+          binned.reduce((sum, pair) => sum + pair.counts[measure][i], 0),
+          count,
+        ),
+      );
+  }
+  // Every call here has under 1,024 input tokens, so none ranks by cache hit rate.
+  assert.deepEqual(all.lowestCache, { nonZero: [], zero: [] });
+  // The failed call (r19) is not among them.
+  assert.ok(all.slowest?.duration.every((row) => row.correlationId !== 'r19'));
+  assert.equal(
+    all.distributions?.duration.reduce((sum, bin) => sum + bin.count, 0),
+    19,
+  );
+  // Split distributions add up to the whole one, bin by bin.
+  for (const by of ['model', 'resource'] as const)
+    for (const measure of BINNED_MEASURES)
+      all.distributions![measure].forEach((bin, i) =>
+        assert.equal(
+          all.measureBins![by].reduce((sum, group) => sum + group.counts[measure][i], 0),
+          bin.count,
+          `${by} ${measure} bin ${i}`,
+        ),
+      );
+  assert.equal(
+    all.stacks?.model.find((g) => g.name === 'other-model')?.points[0].p95DurationMs,
+    null,
+  );
   assert.equal(all.summary.costUsd, '8.288');
   assert.equal(all.summary.cacheWriteTokens, null);
   assert.equal(all.summary.averageCostUsd, '0.4144');
@@ -155,6 +216,46 @@ test('analytics weights cache by tokens and computes P95 from requests', async (
   assert.equal(updated.summary.costUsd, '8.338');
   assert.equal(updated.summary.averageCostUsd, '0.4169');
   assert.equal(updated.summary.p95CostUsd, '0.392');
+});
+
+test('time measures count only successful calls; speed needs enough output and a generation span', () => {
+  const fact = (
+    statusCode: number,
+    durationMs: number,
+    timeToFirstTokenMs: number,
+    timeToLastTokenMs: number,
+    outputTokens = '200',
+  ) =>
+    ({
+      hasRequest: true,
+      hasUsage: true,
+      statusCode,
+      statusConflict: false,
+      durationMs,
+      timeToFirstTokenMs,
+      timeToLastTokenMs,
+      inputTokens: '10',
+      outputTokens,
+      cachedTokens: null,
+      cacheWriteTokens: null,
+      cost: null,
+    }) as unknown as RequestFact;
+  const summary = accumulator();
+  summary.add(fact(200, 3000, 1000, 3000)); // 200 tokens in 2 s: 100 per second
+  summary.add(fact(200, 5000, 1000, 5000)); // 50 per second
+  summary.add(fact(200, 2000, 500, 600, '50')); // 500 per second, from too few tokens to count
+  summary.add(fact(200, 1000, 800, 800)); // no time between first and last token
+  // Failed calls count for none of the time measures, though both generate 2000 tokens a second.
+  summary.add(fact(500, 90000, 80000, 80100));
+  summary.add(fact(429, 300, 100, 200));
+  const result = summary.result();
+  assert.equal(result.errors, 2);
+  assert.equal(result.p50DurationMs, 2000);
+  assert.equal(result.p95DurationMs, 5000);
+  assert.equal(result.p95FirstTokenMs, 1000);
+  assert.equal(result.p50LastTokenMs, 800);
+  assert.equal(result.p95LastTokenMs, 5000);
+  assert.equal(result.p50TokensPerSecond, 50);
 });
 
 test('CSV cells preserve quoting and neutralize spreadsheet formulas', () => {
@@ -268,4 +369,81 @@ test('report cache ignores platform history writes and invalidates on monitoring
     })(),
   );
   assert.strictEqual(analytics.report(filter), next);
+});
+
+test('lowest cache hit rates rank calls from 1,024 input tokens, zero rates apart, the most uncached input first among equals', () => {
+  const call = (correlationId: string, inputTokens: string | null, cachedTokens: string | null) =>
+    ({ correlationId, hasUsage: true, inputTokens, cachedTokens }) as RequestFact;
+  const rows = [
+    call('half', '2000', '1000'),
+    call('quarter', '4000', '1000'),
+    call('small-miss', '1024', '0'),
+    call('below-floor', '1023', '0'),
+    call('no-input', '0', '0'),
+    call('large-miss', '50000', '0'),
+    call('no-cache-field', '3000', null),
+    { ...call('no-usage', '4000', '0'), hasUsage: false },
+  ];
+  const ranked = lowestCache(rows);
+  assert.deepEqual(
+    ranked.nonZero.map((row) => row.correlationId),
+    ['quarter', 'half'],
+  );
+  assert.deepEqual(
+    ranked.zero.map((row) => row.correlationId),
+    ['large-miss', 'small-miss'],
+  );
+});
+
+test('cache savings price cache reads at the input rate, less what they cost, with each item cost', () => {
+  const item = (key: string, unitPriceUsd: string, quantity: string, costUsd: string) => ({
+    key,
+    label: key,
+    unitQuantity: 1000000,
+    unitPriceUsd,
+    quantity,
+    costUsd,
+    reason: null,
+    reference: 'manual:test@1',
+  });
+  const a = accumulator();
+  a.add({
+    hasUsage: true,
+    cost: {
+      knownUsd: '0.71',
+      items: [
+        item('input', '2', '250000', '0.5'),
+        item('cache_read', '0.2', '1000000', '0.2'),
+        item('output', '10', '1000', '0.01'),
+      ],
+    },
+  } as unknown as RequestFact);
+  const result = a.result();
+  // 1M cached tokens would have cost $2 as input; they cost $0.20.
+  assert.equal(result.cacheSavingsUsd, '1.8');
+  assert.deepEqual(result.itemCostUsd, { input: '0.5', cache_read: '0.2', output: '0.01' });
+});
+
+test('the month forecast keeps the month average daily cost from now to the month end', () => {
+  const now = new Date('2026-10-10T04:00:00.000Z'); // noon on October 10 in Shanghai
+  const forecast = monthForecast(
+    [
+      { time: '2026-08-31T15:59:59.000Z', usd: '5' }, // August 31 in Shanghai: neither month
+      { time: '2026-09-15T00:00:00.000Z', usd: '10' },
+      { time: '2026-09-30T16:00:00.000Z', usd: '1' }, // the first second of October
+      { time: '2026-10-09T03:00:00.000Z', usd: '3' },
+      { time: '2026-10-10T01:00:00.000Z', usd: '2' },
+      { time: '2026-10-10T05:00:00.000Z', usd: '100' }, // after now
+    ],
+    now,
+    'Asia/Shanghai',
+  );
+  assert.equal(forecast.days.length, 31);
+  assert.equal(forecast.days[0], '2026-09-30T16:00:00.000Z');
+  assert.equal(forecast.previous, 10);
+  assert.deepEqual(forecast.actual.slice(0, 11), [1, 1, 1, 1, 1, 1, 1, 1, 4, 6, null]);
+  assert.equal(forecast.forecast[8], null);
+  assert.equal(forecast.forecast[9], 6);
+  // $6 in 9.5 days, kept up for the whole month.
+  assert.ok(Math.abs(forecast.forecast[30]! - (6 / 9.5) * 31) < 1e-9);
 });

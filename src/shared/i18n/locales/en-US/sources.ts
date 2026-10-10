@@ -55,9 +55,9 @@ export default {
   'sources.leaveBlankForTheSystemAssignedIdentity': 'Leave blank for the system-assigned identity.',
   'sources.logContainers': 'Diagnostic logs',
   'sources.managedIdentityAuthenticationFailed':
-    'Managed Identity authentication failed. Ensure the identity is enabled and has Blob read access.',
+    'Managed identity authentication failed. Ensure the identity is enabled and has Blob read access.',
   'sources.managedIdentityRequiresAValidAzureStorageHTTPS':
-    'Managed Identity requires a valid Azure Storage HTTPS Blob endpoint.',
+    'Managed identity requires a valid Azure Storage HTTPS Blob endpoint.',
   'sources.noSavedConnectionStringIsAvailable':
     'No saved connection string is available. Enter it again.',
   'sources.savedCredentialNeedsSource': 'Choose a data source to reuse its saved credential.',

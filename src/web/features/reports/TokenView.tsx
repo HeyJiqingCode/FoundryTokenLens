@@ -3,29 +3,46 @@ import {
   ArrowUpFromLine,
   Boxes,
   ChartColumnStacked,
-  ChartLine,
-  ChartNoAxesColumn,
   DatabaseBackup,
   DatabaseZap,
   Percent,
 } from 'lucide-react';
 import { useState } from 'react';
 import { t } from '../../i18n';
-import type { AnalyticsResponse } from '../../../shared/analytics';
-import { ChartLegend, Histogram, TimeBarChart, TimeLineChart } from '../analytics/charts';
-import { contextLabel, count, money, ratio, share, tokens } from '../analytics/format';
+import { COST_CONTEXTS } from '../../../shared/pricing';
 import {
+  CACHE_HIT_GROUPS,
+  INPUT_BIN_EDGES,
+  OUTPUT_BIN_EDGES,
+  thousands,
+  type AnalyticsResponse,
+  type CacheHitGroup,
+} from '../../../shared/analytics';
+import { ChartLegend, TimeBarChart } from '../analytics/charts';
+import { callCount, contextLabel, count, money, ratio, tokens } from '../analytics/format';
+import {
+  billingItem,
+  binSeries,
   displayName,
   rowFilter,
-  seriesTotal,
   stackSeries,
   timeAxis,
   tokenTypeSeries,
-  totalSeries,
+  tokenTypeTotals,
+  TOKEN_TYPES,
   overallTitle,
+  typeOptions,
   type FilterField,
+  type StackBy,
 } from '../analytics/series';
-import { Comparison, EntityName, Muted, ShareBar } from '../analytics/ui';
+import {
+  BandCard,
+  CallListCard,
+  DistributionCard,
+  GroupLineCard,
+  edgeLabels,
+} from '../analytics/cards';
+import { Comparison, EntityName, METRIC_TONE, ShareBar } from '../analytics/ui';
 import { Kpi, KpiStrip } from '../../components/Kpi';
 import { Card } from '../../components/Card';
 import { Segmented } from '../../components/Segmented';
@@ -37,16 +54,12 @@ export function TokenView({
   data: AnalyticsResponse;
   onFilter: (field: FilterField, value: string) => void;
 }) {
-  const [split, setSplit] = useState<'type' | 'model' | 'none'>('type');
+  const [split, setSplit] = useState<'type' | StackBy>('model');
+  const [cacheHit, setCacheHit] = useState<CacheHitGroup>('nonZero');
   const s = data.summary,
     c = data.comparison;
   const input = s.inputTokens === null ? null : Number(s.inputTokens);
-  const series =
-    split === 'type'
-      ? tokenTypeSeries(data)
-      : split === 'model'
-        ? stackSeries(data, 'model', 'tokens')
-        : totalSeries(data, 'tokens');
+  const series = split === 'type' ? tokenTypeSeries(data) : stackSeries(data, split, 'tokens');
   return (
     <>
       <KpiStrip>
@@ -101,23 +114,17 @@ export function TokenView({
       <Card
         title={overallTitle('tokens')}
         icon={ChartColumnStacked}
-        tone="violet"
+        tone={METRIC_TONE.tokens}
         actions={
           <Segmented
             label={t('insights.split')}
             value={split}
-            options={[
-              { value: 'none', label: t('insights.noSplit') },
-              { value: 'model', label: t('insights.byModel') },
-              { value: 'type', label: t('insights.byType') },
-            ]}
+            options={typeOptions()}
             onChange={setSplit}
           />
         }
       >
-        <ChartLegend
-          items={series.map((item) => ({ ...item, value: tokens(seriesTotal(item)) }))}
-        />
+        <ChartLegend items={series} />
         <TimeBarChart
           {...timeAxis(data)}
           series={series}
@@ -126,68 +133,95 @@ export function TokenView({
         />
       </Card>
       <div className="card-row halves">
-        <Card title={t('insights.cacheHitTrend')} icon={ChartLine} tone="teal">
-          <TimeLineChart
-            {...timeAxis(data)}
-            height="fill"
-            fixedMax={1}
-            format={(value) => ratio(value, 0)}
-            label={t('insights.cacheHitTrend')}
-            lines={[
-              {
-                key: 'cache',
-                name: t('insights.cacheHitTrend'),
-                color: 'var(--teal)',
-                values: data.timeline.map((b) => b.cacheRatio),
-              },
-            ]}
-          />
-        </Card>
-        <Card title={t('insights.sizeDistribution')} icon={ChartNoAxesColumn} tone="violet">
-          <div className="histogram-pair">
-            <div>
-              <h3 className="card-subhead">{t('insights.inputTokens')}</h3>
-              <Histogram
-                bins={data.distributions?.input ?? []}
-                color="var(--blue)"
-                label={t('insights.inputTokens')}
-              />
-            </div>
-            <div>
-              <h3 className="card-subhead">{t('insights.outputTokens')}</h3>
-              <Histogram
-                bins={data.distributions?.output ?? []}
-                color="var(--violet)"
-                label={t('insights.outputTokens')}
-              />
-            </div>
-          </div>
-          <h3 className="card-subhead">{t('analytics.contextDistribution')}</h3>
-          <ul className="value-list">
-            {(data.distributions?.context ?? []).map((bin) => (
-              <li key={bin.name}>
-                <EntityName
-                  name={t(contextLabel(bin.name))}
-                  onSelect={() => onFilter('context', bin.name)}
-                />
-                <span>
-                  {count(bin.count)}
-                  {bin.costUsd === null ? (
-                    <>
-                      <Muted />
-                      <Muted />
-                    </>
-                  ) : (
-                    <>
-                      <Muted>{money(bin.costUsd)}</Muted>
-                      <span className="share">{share(bin.costUsd, data.summary.costUsd)}</span>
-                    </>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Card>
+        <GroupLineCard
+          data={data}
+          title={t('analytics.cacheHitRate')}
+          tone="teal"
+          field="cacheRatio"
+          format={(value) => ratio(value, 0)}
+          fixedMax={1}
+          tall
+        />
+        <CallListCard
+          title={t('insights.lowestCacheHitRate')}
+          icon={Percent}
+          tone="teal"
+          view={cacheHit}
+          actions={
+            <Segmented
+              label={t('insights.lowestCacheHitRate')}
+              value={cacheHit}
+              options={CACHE_HIT_GROUPS.map((value) => ({
+                value,
+                label: t(value === 'zero' ? 'insights.cacheHitZero' : 'insights.cacheHitNonZero'),
+              }))}
+              onChange={setCacheHit}
+            />
+          }
+          rows={data.lowestCache?.[cacheHit] ?? []}
+          timeZone={data.timezone}
+          value={(row) => ratio(Number(row.cachedTokens) / Number(row.inputTokens))}
+          detail={(row) =>
+            [
+              `${t('insights.input')} ${tokens(row.inputTokens)}`,
+              `${t('insights.cacheRead')} ${tokens(row.cachedTokens)}`,
+              `${t('insights.output')} ${tokens(row.outputTokens)}`,
+            ].join(' · ')
+          }
+        />
+      </div>
+      <div className="card-row halves">
+        <BandCard
+          title={t('insights.contextDistribution')}
+          tone="slate"
+          format={callCount}
+          onSelect={(context) => onFilter('context', context)}
+          split={(by) => ({
+            // Calls per price context, split by the chosen group.
+            series: binSeries(data, by, 'context'),
+            bands: COST_CONTEXTS.map((context, i) => {
+              const bin = data.distributions?.context?.[i];
+              return {
+                key: context,
+                name: t(contextLabel(context)),
+                detail: `${callCount(bin?.count ?? 0)} · ${money(bin?.costUsd)}`,
+              };
+            }),
+          })}
+        />
+        <BandCard
+          title={t('insights.tokenDistribution')}
+          tone="violet"
+          format={tokens}
+          split={(by) => {
+            // Tokens of each type, not calls, split by the chosen group.
+            const series = tokenTypeTotals(data, by);
+            return {
+              series,
+              bands: TOKEN_TYPES.map((type, i) => ({
+                key: type.key,
+                name: t(type.label),
+                detail: `${tokens(series.reduce((sum, item) => sum + (item.values[i] ?? 0), 0))} · ${money(billingItem(data, type.item).costUsd)}`,
+              })),
+            };
+          }}
+        />
+      </div>
+      <div className="card-row halves">
+        <DistributionCard
+          data={data}
+          title={t('insights.inputDistribution')}
+          tone="blue"
+          measure="input"
+          edges={edgeLabels(INPUT_BIN_EDGES, thousands)}
+        />
+        <DistributionCard
+          data={data}
+          title={t('insights.outputDistribution')}
+          tone="violet"
+          measure="output"
+          edges={edgeLabels(OUTPUT_BIN_EDGES, thousands)}
+        />
       </div>
       <Card title={t('insights.byModelTitle')} icon={Boxes} tone="violet">
         <table className="data-table">
@@ -196,7 +230,7 @@ export function TokenView({
               <th>{t('insights.filterModel')}</th>
               <th>{t('insights.calls')}</th>
               <th>{t('insights.inputTokensTotal')}</th>
-              <th>{t('insights.cachedTokens')}</th>
+              <th>{t('insights.cacheRead')}</th>
               <th>{t('insights.cacheWrites')}</th>
               <th>{t('insights.outputTokens')}</th>
               <th>{t('analytics.cacheHitRate')}</th>

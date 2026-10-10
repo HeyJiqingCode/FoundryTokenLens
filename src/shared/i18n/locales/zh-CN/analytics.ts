@@ -20,7 +20,6 @@ export default {
   'analytics.intervalTooFine': '当前范围的数据点过多，请缩短时间范围或增大聚合粒度。',
   'analytics.conflict': '字段冲突',
   'analytics.unknownStatus': '状态未知',
-  'analytics.contextDistribution': '上下文分档',
   'analytics.missingIP': '未记录 IP',
   'analytics.requestDetail': '请求详情',
   'analytics.copyJson': '复制 JSON',

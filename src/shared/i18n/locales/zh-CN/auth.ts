@@ -7,7 +7,7 @@ export default {
   'auth.entraEnabled': 'Microsoft Entra ID 登录已启用。',
   'auth.deletionNotice': '{account} {organization}',
   'auth.clientId': 'Client ID',
-  'auth.clientSecret': 'Client Secret',
+  'auth.clientSecret': 'Client secret',
   'auth.tenantIds': 'Tenant ID',
   'auth.accessDenied': '没有访问权限',
   'auth.accountSettings': '账户设置',
@@ -47,7 +47,7 @@ export default {
   'auth.emailCopied': '邮箱已复制。',
   'auth.emailIsAlreadyInUse': '该邮箱已被使用。',
   'auth.enableEntra': '启用 Microsoft Entra ID 登录（支持多租户）',
-  'auth.enterAClientSecret': '请输入 Client Secret；更换应用时需要重新填写。',
+  'auth.enterAClientSecret': '请输入 Client secret；更换应用时需要重新填写。',
   'auth.enterAUsableEmailAddress': '请填写可使用的邮箱地址。',
   'auth.enterAValidEmailAddress': '请输入有效的邮箱地址。',
   'auth.enterAValidEmailAndYourCurrentPassword': '请填写有效邮箱和当前密码。',
@@ -81,7 +81,7 @@ export default {
   'auth.managedByMicrosoftEntraID': '由 Microsoft Entra ID 管理。',
   'auth.managedByTheFTLPUBLICURLDeploymentSetting': '由部署配置 FTL_PUBLIC_URL 管理。',
   'auth.microsoftAuthorizationCodeExchangeFailed':
-    'Microsoft 授权码兑换失败，请检查应用配置、Client Secret 和服务器网络。',
+    'Microsoft 授权码兑换失败，请检查应用配置、Client secret 和服务器网络。',
   'auth.microsoftDidNotReturnAnIDToken':
     'Microsoft 未返回身份令牌，请检查应用的 OpenID Connect 配置。',
   'auth.microsoftIDTokenValidationFailed':

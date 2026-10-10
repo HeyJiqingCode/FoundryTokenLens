@@ -12,6 +12,8 @@ export interface ParsedRecord {
   fact: RequestFact;
   inference: boolean;
   placeholder: boolean;
+  /** When a RequestResponse call was received, from `properties.requestTime`. */
+  start: string | null;
 }
 
 export function hash(value: string | Buffer) {
@@ -80,6 +82,19 @@ export function parseRecord(
   const records = Array.isArray(parsed.records) ? parsed.records : [parsed];
   if (!records.length) return [];
   return records.map((value) => normalize(object(value), category, pathResource));
+}
+
+// .NET counts ticks from year 1; this many milliseconds lie between it and 1970.
+const DOTNET_EPOCH_MS = 62135596800000;
+/**
+ * The start of a call from `requestTime`, which logs write as 100 ns ticks either since 1970 or,
+ * from some gateways, since year 1 like .NET. Values outside 2000–2100 are not trusted.
+ */
+function requestStart(value: unknown): string | null {
+  const ticks = Number(scalar(value));
+  if (!Number.isFinite(ticks) || ticks <= 0) return null;
+  const ms = ticks > 3e17 ? ticks / 1e4 - DOTNET_EPOCH_MS : ticks / 1e4;
+  return ms > Date.UTC(2000, 0, 1) && ms < Date.UTC(2100, 0, 1) ? new Date(ms).toISOString() : null;
 }
 
 function normalize(raw: JsonObject, category: LogCategory, pathResource: string): ParsedRecord {
@@ -161,6 +176,7 @@ function normalize(raw: JsonObject, category: LogCategory, pathResource: string)
     ...base,
     fact,
     inference,
+    start: category === 'requests' ? requestStart(p.requestTime) : null,
     placeholder:
       category === 'requests' &&
       fact.statusCode === 200 &&
@@ -207,10 +223,14 @@ export function mergeRequestRecords(records: ParsedRecord[]): RequestFact {
     .map((record) => record.time)
     .sort();
   const eventTime = usageTimes[0] ?? rrTimes[0];
+  // Calls are dated by when they started; without a start, by when their log was written.
+  const starts = (items: ParsedRecord[]) =>
+    items.flatMap((record) => (record.start ? [record.start] : [])).sort();
+  const start = starts(activeResponses)[0] ?? starts(responses)[0];
   const fact: RequestFact = {
     ...base,
-    time: eventTime ?? unique.map((record) => record.time).sort()[0],
-    timeSource: eventTime ? 'event' : 'ingestion',
+    time: start ?? eventTime ?? unique.map((record) => record.time).sort()[0],
+    timeSource: start ? 'start' : eventTime ? 'event' : 'ingestion',
     model: value<string>(
       usages.some((r) => r.fact.model !== null) ? usages : activeResponses,
       'model',
@@ -251,6 +271,11 @@ export function mergeRequestRecords(records: ParsedRecord[]): RequestFact {
     responseRecordCount: responses.length,
     responsePlaceholder: responses.length > 0 && meaningful.length === 0,
   };
+  // A zero duration only comes from the gateway's placeholder record: the last token time is
+  // the closest measure of the call, and without one the duration is unknown.
+  if (fact.durationMs === 0 && fact.timeToLastTokenMs != null)
+    fact.durationMs = fact.timeToLastTokenMs;
+  else if (fact.durationMs === 0 && fact.responsePlaceholder) fact.durationMs = null;
   fact.statusConflict = conflicts.includes('statusCode');
   fact.conflicts = [...new Set(conflicts)];
   return fact;

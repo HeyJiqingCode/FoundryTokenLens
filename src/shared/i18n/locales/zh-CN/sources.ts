@@ -37,7 +37,7 @@ export default {
   'sources.connecting': '正在连接…',
   'sources.connectionAvailable': '连接成功，可读取 {count} 个日志容器。',
   'sources.connectionFailed': '连接失败，请检查连接字符串、网络和 Storage 访问设置。',
-  'sources.connectionTimedOut': '连接超时，请检查 Blob Endpoint 和网络访问规则。',
+  'sources.connectionTimedOut': '连接超时，请检查 Blob endpoint 和网络访问规则。',
   'sources.blobDataPermissionMissing':
     '身份验证已通过，但没有读取 Blob 数据的权限。请在存储账户上为托管身份分配 Storage Blob Data Reader 角色（Reader、Contributor 不含数据权限），分配后可能需要几分钟生效；使用 SAS 时需包含读取和列举权限。',
   'sources.containerAccessFailed':
@@ -45,14 +45,14 @@ export default {
   'sources.containerCredentialsFailed':
     '无法读取日志容器：请检查凭据、Blob 读取/列举权限及 Storage 网络访问规则。',
   'sources.enterAConnectionString': '请输入连接字符串。',
-  'sources.enterTheFullBlobEndpoint': '填写完整的 Blob Endpoint。',
+  'sources.enterTheFullBlobEndpoint': '填写完整的 Blob endpoint。',
   'sources.invalidConnectionStringFormat': '连接字符串格式不正确。',
   'sources.leaveBlankForTheSystemAssignedIdentity': '留空使用系统分配身份。',
   'sources.logContainers': '诊断日志',
   'sources.managedIdentityAuthenticationFailed':
-    'Managed Identity 验证失败。请确认部署环境已启用该身份，并已授予 Blob 读取权限。',
+    'Managed identity 验证失败。请确认部署环境已启用该身份，并已授予 Blob 读取权限。',
   'sources.managedIdentityRequiresAValidAzureStorageHTTPS':
-    'Managed Identity 需要有效的 Azure Storage HTTPS Blob Endpoint。',
+    'Managed identity 需要有效的 Azure Storage HTTPS Blob endpoint。',
   'sources.noSavedConnectionStringIsAvailable': '没有可复用的连接字符串，请重新填写。',
   'sources.savedCredentialNeedsSource': '复用已保存的凭据时必须指定数据源。',
   'sources.save': '保存数据源',

@@ -25,8 +25,11 @@ export function moneyString(units: bigint) {
   const fraction = (abs % MONEY_SCALE).toString().padStart(24, '0').replace(/0+$/, '');
   return `${sign}${abs / MONEY_SCALE}${fraction ? `.${fraction}` : ''}`;
 }
-export function charge(quantity: string, price: string, unit: number) {
-  const numerator = BigInt(quantity) * moneyUnits(price);
+/** `quantity` at `price` per `unit`, rounded half up, in exact money units. */
+export function chargeUnits(quantity: string, price: string, unit: number) {
   const denominator = BigInt(unit);
-  return moneyString((numerator + denominator / 2n) / denominator);
+  return (BigInt(quantity) * moneyUnits(price) + denominator / 2n) / denominator;
+}
+export function charge(quantity: string, price: string, unit: number) {
+  return moneyString(chargeUnits(quantity, price, unit));
 }

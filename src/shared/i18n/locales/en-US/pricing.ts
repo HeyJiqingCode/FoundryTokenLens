@@ -11,7 +11,7 @@ export default {
   'pricing.textCacheRead': 'Text cache read',
   'pricing.imageCacheRead': 'Image cache read',
   'pricing.imageOutput': 'Image output',
-  'pricing.priceUnitGlobal': 'USD / 1M Tokens · Global Standard by default',
+  'pricing.priceUnitGlobal': 'USD / 1M tokens · Global Standard by default',
   'pricing.backToEditor': 'Back to editor',
   'pricing.invalidPriceTemplate': 'The rates do not match this model’s pricing template.',
   'pricing.usePrice': 'Fill draft',
@@ -19,7 +19,7 @@ export default {
   'pricing.modelAdded': 'Model added.',
   'pricing.displayName': 'Display name',
   'pricing.modelAlreadyExists':
-    'This Model ID already exists. Edit the existing model’s prices instead.',
+    'This model ID already exists. Edit the existing model’s prices instead.',
   'pricing.logModelIdReadOnly': 'Model IDs discovered from logs cannot be changed.',
   'pricing.prefillUnsupported':
     'This model has billing dimensions beyond the current pricing template. Automatic fill is not supported.',
@@ -29,7 +29,7 @@ export default {
   'pricing.choosePrefillPrice': 'Choose price',
 
   'pricing.enterPrice': 'Enter at least one rate.',
-  'pricing.enterLongPrice': 'Enter at least one Long context rate.',
+  'pricing.enterLongPrice': 'Enter at least one long-context rate.',
   'pricing.chooseStartTime': 'Select a start time.',
   'pricing.unitPrices': 'Unit prices',
   'pricing.startTime': 'Start time',

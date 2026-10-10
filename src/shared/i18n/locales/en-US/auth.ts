@@ -8,7 +8,7 @@ export default {
   'auth.entraEnabled': 'Microsoft Entra ID sign-in enabled.',
   'auth.deletionNotice': '{account} {organization}',
   'auth.clientId': 'Client ID',
-  'auth.clientSecret': 'Client Secret',
+  'auth.clientSecret': 'Client secret',
   'auth.tenantIds': 'Tenant ID',
   'auth.accessDenied': 'Access denied',
   'auth.accountSettings': 'Account settings',
@@ -19,7 +19,7 @@ export default {
   'auth.administratorPermissionsHaveChanged':
     'Your administrator permissions have changed. Sign in again.',
   'auth.cannotVerifyTheEntraTenant':
-    'Cannot verify the Entra tenant. Check the Tenant ID and server network.',
+    'Cannot verify the Entra tenant. Check the tenant ID and server network.',
   'auth.confirmDeletion': 'Confirm deletion',
   'auth.confirmDisplayName': 'Confirm display name',
   'auth.confirmEmail': 'Confirm email',
@@ -38,7 +38,7 @@ export default {
   'auth.createAndSignIn': 'Create and sign in',
   'auth.createUser': 'Create user',
   'auth.currentPassword': 'Current password',
-  'auth.currentUserBadge': ' · Current User',
+  'auth.currentUserBadge': ' · Current user',
   'auth.defaultAdmin': 'Make new users admins',
   'auth.defaultAdminHint': 'Applies only to Entra users signing in for the first time',
   'auth.deleteNamedUser': 'Delete {name}',
@@ -50,16 +50,16 @@ export default {
   'auth.email': 'Email',
   'auth.emailCopied': 'Email copied.',
   'auth.emailIsAlreadyInUse': 'This email is already in use.',
-  'auth.enableEntra': 'Enable Microsoft Entra ID sign-in (Multitenant support)',
+  'auth.enableEntra': 'Enable Microsoft Entra ID sign-in (multitenant support)',
   'auth.enterAClientSecret':
-    'Enter a Client Secret. A new secret is required when changing the app.',
+    'Enter a client secret. A new secret is required when changing the app.',
   'auth.enterAUsableEmailAddress': 'Enter a usable email address.',
   'auth.enterAValidEmailAddress': 'Enter a valid email address.',
   'auth.enterAValidEmailAndYourCurrentPassword': 'Enter a valid email and your current password.',
   'auth.enterAValidPlatformURL': 'Enter a valid platform URL.',
   'auth.enterAValidPlatformURLFirst': 'Enter a valid platform URL first',
-  'auth.enterAValidTenantID': 'Enter a valid Tenant ID.',
-  'auth.enterAtLeastOneAllowedTenantID': 'Enter at least one allowed Tenant ID.',
+  'auth.enterAValidTenantID': 'Enter a valid tenant ID.',
+  'auth.enterAtLeastOneAllowedTenantID': 'Enter at least one allowed tenant ID.',
   'auth.enterOnlyTheProtocolHostAndOptionalPort':
     'Enter only the protocol, host and optional port. Do not include a path, query or fragment.',
   'auth.enterThePasswordAgain': 'Enter the password again',
@@ -86,12 +86,12 @@ export default {
   'auth.lastAdminRequired': 'At least one administrator must remain enabled.',
   'auth.lastLocalAdminRequired': 'At least one local administrator must remain enabled.',
   'auth.loadingUsers': 'Loading users…',
-  'auth.localAdminBadge': ' · Local Admin',
+  'auth.localAdminBadge': ' · Local admin',
   'auth.managedByMicrosoftEntraID': 'Managed by Microsoft Entra ID.',
   'auth.managedByTheFTLPUBLICURLDeploymentSetting':
     'Managed by the FTL_PUBLIC_URL deployment setting.',
   'auth.microsoftAuthorizationCodeExchangeFailed':
-    'Microsoft authorization code exchange failed. Check the app configuration, Client Secret and server network.',
+    'Microsoft authorization code exchange failed. Check the app configuration, client secret and server network.',
   'auth.microsoftDidNotReturnAnIDToken':
     'Microsoft did not return an ID token. Check the app’s OpenID Connect configuration.',
   'auth.microsoftIDTokenValidationFailed':

@@ -41,7 +41,7 @@ export default {
   'common.foundryTokenLensOverview': 'Foundry Token Lens 概览',
   'common.input': '输入',
   'common.interrupted': '已中断',
-  'common.invalidManagedIdentityClientIDFormat': 'Managed Identity Client ID 格式不正确。',
+  'common.invalidManagedIdentityClientIDFormat': 'Managed identity 的 Client ID 格式不正确。',
 
   'common.languageChinese': '简体中文',
   'common.languageEnglish': 'English',

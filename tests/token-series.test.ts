@@ -14,7 +14,6 @@ const bucket = (
     errors: 0,
     costUsd: null,
     cacheRatio: null,
-    averageDurationMs: null,
     p95DurationMs: null,
     p95FirstTokenMs: null,
     ...tokens,
@@ -22,6 +21,8 @@ const bucket = (
 
 test('token types partition prompt tokens like billing: ordinary input excludes cache reads and writes', () => {
   const data = {
+    models: [] as AnalyticsResponse['models'],
+    resources: [] as AnalyticsResponse['resources'],
     timeline: [
       bucket('2026-09-28T00:00:00Z', {
         inputTokens: '10000',
@@ -45,8 +46,8 @@ test('token types partition prompt tokens like billing: ordinary input excludes 
     ],
   } as AnalyticsResponse;
   const series = Object.fromEntries(tokenTypeSeries(data).map((s) => [s.key, s.values]));
-  assert.deepEqual(Object.keys(series), ['ordinary', 'cacheWrite', 'cacheRead', 'output']);
-  assert.deepEqual(series.ordinary, [400, 800, 0]);
+  assert.deepEqual(Object.keys(series), ['input', 'cacheWrite', 'cacheRead', 'output']);
+  assert.deepEqual(series.input, [400, 800, 0]);
   assert.deepEqual(series.cacheWrite, [600, 0, 0]);
   assert.deepEqual(series.cacheRead, [9000, 200, 0]);
   assert.deepEqual(series.output, [500, 100, 0]);

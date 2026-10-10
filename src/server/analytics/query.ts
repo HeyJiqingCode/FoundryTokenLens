@@ -91,15 +91,13 @@ export function requestWhere(filters: AnalyticsFilters) {
   }
   return { sql: clauses.join(' AND ') || '1=1', params };
 }
+/**
+ * The requests of the given sources with their stored costs. Each source holds its own logs, so
+ * a request appears once per source that holds it; imports warn when two sources share one.
+ */
 export function joinedRequests(keys: string[]) {
   const placeholders = keys.map(() => '?').join(',') || "''";
-  const facts =
-    keys.length <= 1
-      ? `(SELECT *,1 source_count FROM request_facts WHERE source_key IN (${placeholders})) r`
-      : `(SELECT merged.*,json_extract(fact_json,'$.time') time FROM (
-      SELECT resource_id,correlation_id,min(source_key) source_key,max(is_inference) is_inference,
-      CASE WHEN count(*)=1 THEN min(fact_json) ELSE ftl_merge_facts(json_group_array(fact_json)) END fact_json,
-      count(*) source_count FROM request_facts WHERE source_key IN (${placeholders}) GROUP BY resource_id,correlation_id) merged) r`;
-  return `FROM ${facts} LEFT JOIN request_costs c
+  return `FROM (SELECT * FROM request_facts WHERE source_key IN (${placeholders})) r
+    LEFT JOIN request_costs c
     ON c.source_key=r.source_key AND c.resource_id=r.resource_id AND c.correlation_id=r.correlation_id`;
 }

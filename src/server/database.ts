@@ -1,14 +1,12 @@
 import { createLogStore, type LogStore } from './platform/log-store.js';
-import { mergeRequestRecords, type ParsedRecord } from './ingestion/parser.js';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
-import type { RequestFact } from '../shared/ingestion.js';
 
 // No migrations: a database is created at this schema or refused, so a schema change means
 // bumping the version and starting with an empty data directory.
-const SCHEMA_VERSION = 14;
+const SCHEMA_VERSION = 16;
 
 const FULL_SCHEMA = `
   CREATE TABLE app_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -66,7 +64,8 @@ const FULL_SCHEMA = `
     imported_records INTEGER NOT NULL DEFAULT 0, downloaded_bytes INTEGER NOT NULL DEFAULT 0,
     list_calls INTEGER NOT NULL DEFAULT 0, read_calls INTEGER NOT NULL DEFAULT 0,
     error_count INTEGER NOT NULL DEFAULT 0, message TEXT,
-    trigger TEXT CHECK (trigger IN ('scheduled', 'manual')), actor TEXT
+    trigger TEXT CHECK (trigger IN ('scheduled', 'manual')), actor TEXT,
+    duplicate_requests INTEGER NOT NULL DEFAULT 0
   );
   CREATE INDEX import_run_time ON import_runs (source_key, started_at DESC);
   CREATE TABLE request_costs (
@@ -133,34 +132,6 @@ export function openDatabase(dataDir: string): AppDatabase {
   });
 
   try {
-    connection.function('ftl_merge_facts', { deterministic: true }, (raw: unknown) => {
-      const facts = (JSON.parse(String(raw)) as string[]).map((value) =>
-        JSON.parse(value),
-      ) as RequestFact[];
-      const records: ParsedRecord[] = [];
-      for (const [index, fact] of facts.entries())
-        for (const category of ['usage', 'requests'] as const) {
-          if (category === 'usage' ? !fact.hasUsage : !fact.hasRequest) continue;
-          records.push({
-            hash: `${index}/${category}`,
-            category,
-            resourceId: fact.resourceId,
-            correlationId: fact.correlationId,
-            time: fact.time,
-            raw: '',
-            fact,
-            inference: fact.requestKind !== 'other',
-            placeholder: category === 'requests' && fact.responsePlaceholder === true,
-          });
-        }
-      const merged = mergeRequestRecords(records);
-      merged.usageRecordCount = facts.reduce((n, fact) => n + (fact.usageRecordCount ?? 0), 0);
-      merged.responseRecordCount = facts.reduce(
-        (n, fact) => n + (fact.responseRecordCount ?? 0),
-        0,
-      );
-      return JSON.stringify(merged);
-    });
     const current = connection.pragma('user_version', { simple: true }) as number;
     if (current !== 0 && current !== SCHEMA_VERSION) {
       throw new Error(

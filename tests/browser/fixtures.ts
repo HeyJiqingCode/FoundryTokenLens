@@ -68,6 +68,8 @@ export async function mockApi(page: Page) {
     deletePending: undefined as Promise<void> | undefined,
     taskPending: undefined as Promise<void> | undefined,
     brokenReport: false,
+    /** Replaces the one-call report, for views that need groups, bins and lists. */
+    report: undefined as AnalyticsResponse | undefined,
     revision: '1',
     running: false,
     requests: [] as { path: string; method: string; body: any }[],
@@ -111,7 +113,7 @@ export async function mockApi(page: Page) {
         resourceCount: 1,
       };
     else if (path === 'analytics')
-      body = state.brokenReport ? { ...report(), models: null } : report();
+      body = state.brokenReport ? { ...report(), models: null } : (state.report ?? report());
     else if (path === 'analytics/facets') body = report().facets;
     else if (path === 'requests') body = { requests: [fact], total: 60 };
     else if (path === 'requests/detail') body = { request: fact };

@@ -136,6 +136,17 @@
   font-weight: 600;
   box-shadow: 0 1px 3px #20263318;
 }
+/* A hidden bold copy under the label reserves the selected width. */
+.segmented-label {
+  display: inline-grid;
+}
+.segmented-label::after {
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: 600;
+  content: attr(data-label);
+}
 .segmented button:disabled {
   color: #aab2c0;
   cursor: not-allowed;
@@ -288,19 +299,6 @@
 }
 .card-row.halves {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.card-row.thirds {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr);
-}
-/* A column of cards beside a taller card: the last one fills, so both columns end together. */
-.card-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 0;
-}
-.card-stack > :last-child {
-  flex: 1;
 }
 .card {
   min-width: 0;
@@ -666,6 +664,14 @@ button:hover .link-name {
   letter-spacing: -0.5px;
   line-height: 1.25;
   white-space: nowrap;
+}
+/* A unit too long to share the figure's size, such as Token/s. */
+.kpi-unit {
+  margin-left: 4px;
+  color: var(--secondary);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
 }
 .kpi-value.unavailable,
 .kpi-value .muted {

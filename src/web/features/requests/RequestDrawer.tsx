@@ -10,6 +10,7 @@ import { copyText } from '../../components/copy-text';
 import { ScrollViewport } from '../../components/ScrollViewport';
 import { count, latency, money, ratio } from '../analytics/format';
 import { billingLabel, resourceName } from '../analytics/series';
+import { ChartLegend } from '../analytics/charts';
 import { Muted, StatusCode } from '../analytics/ui';
 import { TitleIcon } from '../../components/Card';
 
@@ -24,6 +25,50 @@ const groupLabels = {
 type EvidenceResponse = { records: RecordEvidence[] };
 type RequestDetailResponse = { request: RequestFact | null };
 type Row = Pick<RequestFact, 'resourceId' | 'correlationId'> & Partial<RequestFact>;
+/**
+ * The call's duration split at the first and the last token: waiting for the first token,
+ * generating, and wrapping up after the last one. Shown only when all three times are known.
+ */
+function TimeSplit({
+  request,
+}: {
+  request: Partial<Pick<RequestFact, 'durationMs' | 'timeToFirstTokenMs' | 'timeToLastTokenMs'>>;
+}) {
+  const total = request.durationMs,
+    first = request.timeToFirstTokenMs,
+    last = request.timeToLastTokenMs;
+  if (total == null || first == null || last == null) return null;
+  const phases = [
+    { key: 'wait', name: t('insights.firstTokenWait'), color: 'var(--teal)', ms: first },
+    {
+      key: 'generation',
+      name: t('insights.generation'),
+      color: 'var(--violet)',
+      ms: Math.max(0, last - first),
+    },
+    {
+      key: 'wrapUp',
+      name: t('insights.wrapUp'),
+      color: 'var(--chart-other)',
+      ms: Math.max(0, total - last),
+    },
+  ];
+  return (
+    <>
+      <span className="time-split-bar" aria-hidden="true">
+        {phases.map((phase) =>
+          phase.ms > 0 ? (
+            <i key={phase.key} style={{ flexGrow: phase.ms, background: phase.color }} />
+          ) : null,
+        )}
+      </span>
+      <ChartLegend
+        compact
+        items={phases.map((phase) => ({ ...phase, name: `${phase.name} ${latency(phase.ms)}` }))}
+      />
+    </>
+  );
+}
 /**
  * Readable field values: scalar arrays (diagnostic logs often wrap a single number in one)
  * are listed without brackets, token counts get digit grouping, and objects stay JSON.
@@ -216,21 +261,28 @@ export function RequestDrawer({
             </dd>
           </div>
           <div>
-            <dt>{t('insights.output')}</dt>
-            <dd>{request.outputTokens == null ? '—' : count(Number(request.outputTokens))}</dd>
+            <dt>{t('insights.cacheWrites')}</dt>
+            <dd>
+              {request.hasUsage === false ? '—' : count(Number(request.cacheWriteTokens ?? 0))}
+            </dd>
           </div>
           <div>
-            <dt>{t('insights.latency')}</dt>
-            <dd>{latency(request.durationMs)}</dd>
+            <dt>{t('insights.output')}</dt>
+            <dd>{request.outputTokens == null ? '—' : count(Number(request.outputTokens))}</dd>
           </div>
           <div>
             <dt>{t('insights.ttft')}</dt>
             <dd>{latency(request.timeToFirstTokenMs)}</dd>
           </div>
           <div>
-            <dt>{t('insights.cacheWrites')}</dt>
+            <dt>{t('insights.ttlt')}</dt>
+            <dd>{latency(request.timeToLastTokenMs)}</dd>
+          </div>
+          <div className="drawer-duration">
+            <dt>{t('insights.latency')}</dt>
             <dd>
-              {request.hasUsage === false ? '—' : count(Number(request.cacheWriteTokens ?? 0))}
+              {latency(request.durationMs)}
+              <TimeSplit request={request} />
             </dd>
           </div>
         </dl>

@@ -46,7 +46,7 @@ export default {
   'common.foundryTokenLensOverview': 'Foundry Token Lens overview',
   'common.input': 'Input',
   'common.interrupted': 'Interrupted',
-  'common.invalidManagedIdentityClientIDFormat': 'Invalid Managed Identity Client ID format.',
+  'common.invalidManagedIdentityClientIDFormat': 'Invalid managed identity client ID format.',
 
   'common.languageChinese': '简体中文',
   'common.languageEnglish': 'English',

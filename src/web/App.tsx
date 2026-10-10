@@ -43,6 +43,7 @@ import {
   rangeText,
 } from './features/analytics/DataToolbar';
 import type { FilterField } from './features/analytics/series';
+import { TimeRangeSelect } from './features/analytics/charts';
 import {
   FILTER_KEYS,
   filterQuery,
@@ -185,6 +186,13 @@ function Workspace({ user, onUserChanged }: { user: SessionUser; onUserChanged: 
   }
   function filterBy(field: FilterField, value: string) {
     changeFilters({ ...filters, [field]: value });
+  }
+  /** A span dragged across a time chart, kept within the window shown, as a custom range. */
+  function selectRange(from: string, to: string) {
+    const shown = analytics.data?.range;
+    const start = shown && from < shown.from ? shown.from : from;
+    const end = shown && to > shown.to ? shown.to : to;
+    if (start < end) changeFilters({ ...filters, range: undefined, from: start, to: end });
   }
   // The header shows it on data views, the account page and settings (the fallback).
   const PageIcon = isAccount
@@ -351,112 +359,114 @@ function Workspace({ user, onUserChanged }: { user: SessionUser; onUserChanged: 
                         : null
                   }
                 />
-                <Routes>
-                  <Route
-                    path="/"
-                    element={
-                      <Navigate to={{ pathname: '/overview', search: location.search }} replace />
-                    }
-                  />
-                  <Route
-                    path="/overview"
-                    element={
-                      <OverviewPage
-                        analytics={analytics.data}
-                        error={analytics.error}
-                        onFilter={filterBy}
-                      />
-                    }
-                  />
-                  <Route
-                    path="/analysis"
-                    element={
-                      <Navigate
-                        to={{ pathname: '/analysis/cost', search: location.search }}
-                        replace
-                      />
-                    }
-                  />
-                  {REPORT_SECTIONS.map((section) => (
+                <TimeRangeSelect.Provider value={selectRange}>
+                  <Routes>
                     <Route
-                      key={section.id}
-                      path={`/analysis/${section.id}`}
+                      path="/"
                       element={
-                        <ReportsPage
-                          tab={section.id}
-                          data={analytics.data}
+                        <Navigate to={{ pathname: '/overview', search: location.search }} replace />
+                      }
+                    />
+                    <Route
+                      path="/overview"
+                      element={
+                        <OverviewPage
+                          analytics={analytics.data}
                           error={analytics.error}
                           onFilter={filterBy}
                         />
                       }
                     />
-                  ))}
-                  <Route
-                    path="/requests"
-                    element={
-                      <RequestsPage
-                        list={requests.data}
-                        loading={requests.loading}
-                        page={listPage}
-                        timeZone={reportZone}
-                      />
-                    }
-                  />
-                  <Route
-                    path="/account"
-                    element={<AccountPage user={user} onUserChanged={onUserChanged} />}
-                  />
-                  <Route path="/settings" element={<Navigate to={settingsHome} replace />} />
-                  <Route
-                    path="/settings/sources"
-                    element={<Navigate to="/settings/data" replace />}
-                  />
-                  <Route
-                    path="/settings/schedule"
-                    element={<Navigate to="/settings/data" replace />}
-                  />
-                  {SETTINGS_SECTIONS.map((section) => (
                     <Route
-                      key={section.id}
-                      path={`/settings/${section.id}`}
+                      path="/analysis"
                       element={
-                        user.role !== 'admin' && section.id !== 'platform' ? (
-                          <PageMessage
-                            title={t('auth.accessDenied')}
-                            text={t('auth.pageIsAvailableToAdministratorsOnly')}
-                          />
-                        ) : (
-                          <div
-                            id="settings-content"
-                            role={user.role === 'admin' ? 'tabpanel' : undefined}
-                            aria-labelledby={
-                              user.role === 'admin' ? `settings-tab-${section.id}` : undefined
-                            }
-                            tabIndex={user.role === 'admin' ? 0 : undefined}
-                            className={`card-grid settings-content settings-${section.id}`}
-                          >
-                            <SettingsPanel
-                              section={section.id}
-                              user={user}
-                              onUserChanged={onUserChanged}
-                              ingestion={ingestion.status}
-                              onImportChanged={ingestion.refresh}
-                            />
-                          </div>
-                        )
+                        <Navigate
+                          to={{ pathname: '/analysis/cost', search: location.search }}
+                          replace
+                        />
                       }
                     />
-                  ))}
-                  <Route
-                    path="*"
-                    element={
-                      <PageMessage
-                        title={t('navigation.notFound')}
-                        text={t('common.checkTheURLOrReturnToTheOverview')}
+                    {REPORT_SECTIONS.map((section) => (
+                      <Route
+                        key={section.id}
+                        path={`/analysis/${section.id}`}
+                        element={
+                          <ReportsPage
+                            tab={section.id}
+                            data={analytics.data}
+                            error={analytics.error}
+                            onFilter={filterBy}
+                          />
+                        }
                       />
-                    }
-                  />
-                </Routes>
+                    ))}
+                    <Route
+                      path="/requests"
+                      element={
+                        <RequestsPage
+                          list={requests.data}
+                          loading={requests.loading}
+                          page={listPage}
+                          timeZone={reportZone}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/account"
+                      element={<AccountPage user={user} onUserChanged={onUserChanged} />}
+                    />
+                    <Route path="/settings" element={<Navigate to={settingsHome} replace />} />
+                    <Route
+                      path="/settings/sources"
+                      element={<Navigate to="/settings/data" replace />}
+                    />
+                    <Route
+                      path="/settings/schedule"
+                      element={<Navigate to="/settings/data" replace />}
+                    />
+                    {SETTINGS_SECTIONS.map((section) => (
+                      <Route
+                        key={section.id}
+                        path={`/settings/${section.id}`}
+                        element={
+                          user.role !== 'admin' && section.id !== 'platform' ? (
+                            <PageMessage
+                              title={t('auth.accessDenied')}
+                              text={t('auth.pageIsAvailableToAdministratorsOnly')}
+                            />
+                          ) : (
+                            <div
+                              id="settings-content"
+                              role={user.role === 'admin' ? 'tabpanel' : undefined}
+                              aria-labelledby={
+                                user.role === 'admin' ? `settings-tab-${section.id}` : undefined
+                              }
+                              tabIndex={user.role === 'admin' ? 0 : undefined}
+                              className={`card-grid settings-content settings-${section.id}`}
+                            >
+                              <SettingsPanel
+                                section={section.id}
+                                user={user}
+                                onUserChanged={onUserChanged}
+                                ingestion={ingestion.status}
+                                onImportChanged={ingestion.refresh}
+                              />
+                            </div>
+                          )
+                        }
+                      />
+                    ))}
+                    <Route
+                      path="*"
+                      element={
+                        <PageMessage
+                          title={t('navigation.notFound')}
+                          text={t('common.checkTheURLOrReturnToTheOverview')}
+                        />
+                      }
+                    />
+                  </Routes>
+                </TimeRangeSelect.Provider>
               </ErrorBoundary>
             </ScrollViewport>
           </div>
