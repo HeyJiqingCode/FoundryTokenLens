@@ -2,6 +2,7 @@ import { createPlatformService } from './platform/service.js';
 import { registerPlatformRoutes } from './platform/routes.js';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import fastifyCompress from '@fastify/compress';
 import fastifyStatic from '@fastify/static';
 import Fastify from 'fastify';
 import type { BootstrapResponse } from '../shared/navigation.js';
@@ -59,6 +60,9 @@ export async function buildApp(
         }
       : false,
   });
+  // Reports are large JSON, sent again every minute; static files gain too, so this comes first.
+  // Only responses: no route takes compressed request bodies.
+  await app.register(fastifyCompress, { globalDecompression: false });
   const database = openDatabase(config.dataDir);
   let logCleanup: ReturnType<typeof setInterval> | undefined;
   let worker: ImportWorker | undefined;
