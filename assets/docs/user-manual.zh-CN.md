@@ -68,7 +68,7 @@ docker run -d --name foundrytokenlens --init --restart unless-stopped \
 **1、添加诊断设置**
 
 在 Azure Portal 打开 Foundry 资源，左侧菜单选择 Monitoring / Diagnostic settings，点击 + Add diagnostic setting。\
-<img src="../img/docs/20261013141304.png" width="700">
+![](../img/docs/20261013141304.png)
 
 **2、填写相关信息**
 

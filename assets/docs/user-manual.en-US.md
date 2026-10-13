@@ -68,7 +68,7 @@ The platform builds all of its reports from the diagnostic logs of your Foundry 
 **1. Add a diagnostic setting**
 
 In the Azure portal, open the Foundry resource, select **Monitoring** > **Diagnostic settings** in the left menu, and select **+ Add diagnostic setting**.\
-<img src="../img/docs/20261013141304.png" width="700">
+![](../img/docs/20261013141304.png)
 
 **2. Fill in the setting**
 
