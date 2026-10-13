@@ -1,6 +1,6 @@
 # FoundryTokenLens
 
-A self-hosted dashboard for Microsoft Foundry usage. It reads the diagnostic logs your Foundry resources already write to Azure Blob Storage and turns them into request-level token, cost and performance reports.
+A self-hosted dashboard for Microsoft Foundry usage. It reads the diagnostic logs your Foundry resources already write to Azure Blob Storage and turns them into request-level token, cost and performance reports. For more details, see the user manual in [简体中文](./assets/docs/user-manual.zh-CN.md) or [English](./assets/docs/user-manual.en-US.md).
 
 ## Features
 
@@ -138,10 +138,3 @@ npm run check
 
 > Browser tests start their own UI on port 8099 against a mocked API and never touch `data/`.\
 > CI runs only when a `v*` tag is pushed: it runs the same check, then publishes the image and a GitHub release.
-
-## More Details
-
-For accounts and sign-in, data sources and scheduled tasks, pricing, and how each report is calculated, see the user manuals:
-
-- [User Manual (简体中文)](./assets/docs/user-manual.zh-CN.md)
-- [User Manual (English)](./assets/docs/user-manual.en-US.md)
