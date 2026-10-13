@@ -120,7 +120,7 @@ test('source settings require admin, encrypt secrets, and survive reopening with
     headers,
     payload: {
       authMode: 'managed_identity',
-      endpoint: 'https://fixtureacct.blob.core.windows.net',
+      accountName: 'fixtureacct',
       containers: sourcePayload.containers,
     },
   });
@@ -138,7 +138,7 @@ test('source settings require admin, encrypt secrets, and survive reopening with
         payload: {
           ...sourcePayload,
           authMode: 'managed_identity',
-          endpoint: 'https://fixtureacct.blob.core.windows.net',
+          accountName: 'fixtureacct',
         },
       })
     ).statusCode,
@@ -308,6 +308,35 @@ test('read-only users cannot configure sources or prices and the last admin cann
     (await app.inject({ url: '/api/bootstrap', headers: viewerHeaders })).statusCode,
     401,
   );
+});
+
+test('a managed identity source names its storage account and the server builds its Blob endpoint', async (t) => {
+  const endpoints: string[] = [];
+  const { app, cookie } = await testApp(t, {
+    async inspect(source) {
+      endpoints.push(source.endpoint);
+      return {
+        endpoint: source.endpoint,
+        accountName: 'fixtureacct',
+        verifiedAt: new Date().toISOString(),
+        containers: LOG_CONTAINERS.map((item) => ({ ...item })),
+      };
+    },
+  });
+  const headers = { ...requestHeaders, cookie };
+  const inspect = (accountName: string) =>
+    app.inject({
+      method: 'POST',
+      url: '/api/settings/source/test',
+      headers,
+      payload: { authMode: 'managed_identity', accountName, containers: [] },
+    });
+  assert.equal((await inspect(' FixtureAcct ')).statusCode, 200);
+  assert.deepEqual(endpoints, ['https://fixtureacct.blob.core.windows.net']);
+  const endpoint = await inspect('https://fixtureacct.blob.core.windows.net');
+  assert.equal(endpoint.statusCode, 400);
+  assert.equal(endpoint.json().code, 'sources.enterAValidStorageAccountName');
+  assert.equal(endpoints.length, 1);
 });
 
 test('source saves automatically associate detected diagnostic containers and reject an empty detection', async (t) => {

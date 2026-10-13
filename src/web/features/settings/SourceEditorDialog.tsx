@@ -31,7 +31,7 @@ export function SourceEditorDialog({
   useLocale();
   const [mode, setMode] = useState<SourceAuthMode>(source?.authMode ?? 'connection_string');
   const [credential, setCredential] = useState('');
-  const [endpoint, setEndpoint] = useState(source?.endpoint ?? '');
+  const [accountName, setAccountName] = useState(source?.accountName ?? '');
   const [clientId, setClientId] = useState(source?.managedIdentityClientId ?? '');
   const [enabled, setEnabled] = useState(source?.enabled ?? true);
   const [connections, setConnections] = useState<
@@ -51,7 +51,7 @@ export function SourceEditorDialog({
             key:
               source.authMode === 'connection_string'
                 ? ''
-                : JSON.stringify([source.endpoint, source.managedIdentityClientId]),
+                : JSON.stringify([source.accountName, source.managedIdentityClientId]),
             inspection: {
               endpoint: source.endpoint,
               accountName: source.accountName,
@@ -63,7 +63,7 @@ export function SourceEditorDialog({
       : {},
   );
   const connectionKey =
-    mode === 'connection_string' ? credential : JSON.stringify([endpoint, clientId]);
+    mode === 'connection_string' ? credential : JSON.stringify([accountName, clientId]);
   const connection = connections[mode]?.key === connectionKey ? connections[mode] : undefined;
   const inspection = connection?.inspection;
   const containers = inspection?.containers.map((item) => item.name) ?? [];
@@ -83,7 +83,7 @@ export function SourceEditorDialog({
       : {
           authMode: mode,
           enabled,
-          endpoint,
+          accountName,
           managedIdentityClientId: clientId,
           containers: [],
         };
@@ -127,7 +127,7 @@ export function SourceEditorDialog({
         mode === source.authMode &&
         (mode === 'connection_string'
           ? !credential
-          : endpoint === source.endpoint && clientId === source.managedIdentityClientId) &&
+          : accountName === source.accountName && clientId === source.managedIdentityClientId) &&
         containers.length === source.containers.length &&
         containers.every((name) => source.containers.includes(name)) &&
         inspection?.verifiedAt === source.verifiedAt;
@@ -236,14 +236,13 @@ export function SourceEditorDialog({
                 </Field>
               ) : (
                 <>
-                  <Field label="Blob Endpoint">
+                  <Field label="Storage Account">
                     <input
-                      type="url"
-                      name="endpoint"
-                      placeholder="https://account.blob.core.windows.net"
-                      value={endpoint}
+                      name="accountName"
+                      placeholder="mystorageaccount"
+                      value={accountName}
                       onChange={(event) => {
-                        setEndpoint(event.target.value);
+                        setAccountName(event.target.value);
                         setNotice(null);
                       }}
                     />

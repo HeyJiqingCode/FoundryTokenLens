@@ -20,7 +20,8 @@ export interface SourceInput {
   enabled?: boolean;
   connectionString?: string;
   useSavedCredential?: boolean;
-  endpoint?: string;
+  /** Managed identity: the storage account, whose Blob endpoint the server builds. */
+  accountName?: string;
   managedIdentityClientId?: string;
   containers: string[];
 }

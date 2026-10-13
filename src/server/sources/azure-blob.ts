@@ -12,36 +12,15 @@ export type ResolvedSource = {
 export interface SourceInspector {
   inspect(source: ResolvedSource): Promise<SourceInspection>;
 }
-const azureSuffixes = [
-  '.blob.core.windows.net',
-  '.blob.core.chinacloudapi.cn',
-  '.blob.core.usgovcloudapi.net',
-];
-
-export function normalizeManagedIdentityEndpoint(value: string) {
-  let url: URL;
-  try {
-    url = new URL(value);
-  } catch {
-    throw new HttpError(400, 'sources.enterTheFullBlobEndpoint');
-  }
-  if (
-    url.protocol !== 'https:' ||
-    url.port ||
-    url.username ||
-    url.password ||
-    url.search ||
-    url.hash ||
-    !['', '/'].includes(url.pathname) ||
-    !azureSuffixes.some(
-      (suffix) =>
-        url.hostname.endsWith(suffix) &&
-        /^[a-z0-9]{3,24}$/.test(url.hostname.slice(0, -suffix.length)),
-    )
-  ) {
-    throw new HttpError(400, 'sources.managedIdentityRequiresAValidAzureStorageHTTPS');
-  }
-  return url.origin;
+/**
+ * The Blob endpoint of the named storage account in the global Azure cloud: the only address a
+ * managed identity's token is sent to.
+ */
+export function storageAccountEndpoint(account: string) {
+  const name = account.trim().toLowerCase();
+  if (!/^[a-z0-9]{3,24}$/.test(name))
+    throw new HttpError(400, 'sources.enterAValidStorageAccountName');
+  return `https://${name}.blob.core.windows.net`;
 }
 
 export function createBlobClient(source: ResolvedSource) {
@@ -49,7 +28,9 @@ export function createBlobClient(source: ResolvedSource) {
   // downloads that are slow but progressing. Callers bound each call with their own abort signal.
   const options = { retryOptions: { maxTries: 1 } };
   if (source.authMode === 'managed_identity') {
-    const endpoint = normalizeManagedIdentityEndpoint(source.endpoint);
+    const endpoint = storageAccountEndpoint(
+      /^https:\/\/([^./]+)\.blob\.core\.windows\.net$/.exec(source.endpoint)?.[1] ?? '',
+    );
     const credential = source.managedIdentityClientId
       ? new ManagedIdentityCredential({ clientId: source.managedIdentityClientId })
       : new ManagedIdentityCredential();

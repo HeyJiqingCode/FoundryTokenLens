@@ -148,3 +148,19 @@ test('API error codes render in English and toast lasts three seconds', async ({
   await page.clock.fastForward(1001);
   await expect(toast).toHaveCount(0);
 });
+
+test('a managed identity source is entered by its storage account name', async ({ page }) => {
+  const state = await mockApi(page);
+  await page.goto('/settings/data?language=en-US');
+  await page.getByRole('button', { name: 'Add data source', exact: true }).click();
+  await page.getByLabel('Authentication', { exact: true }).selectOption('managed_identity');
+  await expect(page.getByLabel('Blob Endpoint')).toHaveCount(0);
+  await page.getByLabel('Storage Account', { exact: true }).fill('fixtureacct');
+  await page.getByRole('button', { name: 'Test connection', exact: true }).click();
+  await expect
+    .poll(() => state.requests.find((r) => r.path === 'settings/source/test')?.body)
+    .toMatchObject({ authMode: 'managed_identity', accountName: 'fixtureacct' });
+  expect(state.requests.find((r) => r.path === 'settings/source/test')?.body).not.toHaveProperty(
+    'endpoint',
+  );
+});

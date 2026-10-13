@@ -50,14 +50,13 @@ export default {
   'sources.containerCredentialsFailed':
     'Cannot read log containers. Check credentials, Blob read/list permissions and Storage network rules.',
   'sources.enterAConnectionString': 'Enter a connection string.',
-  'sources.enterTheFullBlobEndpoint': 'Enter the full Blob endpoint.',
+  'sources.enterAValidStorageAccountName':
+    'Enter a valid storage account name: 3–24 lowercase letters or numbers.',
   'sources.invalidConnectionStringFormat': 'Invalid connection string format.',
   'sources.leaveBlankForTheSystemAssignedIdentity': 'Leave blank for the system-assigned identity.',
   'sources.logContainers': 'Diagnostic logs',
   'sources.managedIdentityAuthenticationFailed':
     'Managed identity authentication failed. Ensure the identity is enabled and has Blob read access.',
-  'sources.managedIdentityRequiresAValidAzureStorageHTTPS':
-    'Managed identity requires a valid Azure Storage HTTPS Blob endpoint.',
   'sources.noSavedConnectionStringIsAvailable':
     'No saved connection string is available. Enter it again.',
   'sources.savedCredentialNeedsSource': 'Choose a data source to reuse its saved credential.',

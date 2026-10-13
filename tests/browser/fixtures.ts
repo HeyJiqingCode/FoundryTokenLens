@@ -124,6 +124,13 @@ export async function mockApi(page: Page) {
       state.task = { ...state.task, ...req.postDataJSON() };
       body = { task: state.task };
     } else if (path === 'settings/sources') body = { sources: [source] };
+    else if (path === 'settings/source/test')
+      body = {
+        endpoint: source.endpoint,
+        accountName: source.accountName,
+        containers: source.availableContainers,
+        verifiedAt: source.verifiedAt,
+      };
     else if (path.endsWith('/statistics')) body = { statistics: null };
     else if (path === 'settings/sources/' + source.id && req.method() === 'DELETE') {
       await state.deletePending;

@@ -50,7 +50,7 @@ export const sourceSchema = z
     enabled: z.boolean().optional(),
     connectionString: z.string().trim().max(16384).optional(),
     useSavedCredential: z.boolean().optional(),
-    endpoint: z.string().trim().max(512).optional(),
+    accountName: z.string().trim().max(64).optional(),
     managedIdentityClientId: z.string().trim().max(64).optional(),
     containers: z
       .array(

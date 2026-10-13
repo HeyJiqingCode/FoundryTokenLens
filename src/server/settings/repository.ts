@@ -19,7 +19,7 @@ import type {
 import type { AppDatabase } from '../database.js';
 import { HttpError } from '../http/errors.js';
 import type { SecretStore } from '../security/secrets.js';
-import { normalizeManagedIdentityEndpoint, type ResolvedSource } from '../sources/azure-blob.js';
+import { storageAccountEndpoint, type ResolvedSource } from '../sources/azure-blob.js';
 import type { PriceModelProfile } from '../../shared/pricing.js';
 import { modelIdKey } from '../../shared/price-identity.js';
 import { priceTemplateMatches } from '../../shared/price-form.js';
@@ -165,7 +165,7 @@ export function createSettingsRepository(database: AppDatabase, secrets: SecretS
         throw new HttpError(400, 'common.invalidManagedIdentityClientIDFormat');
       return {
         authMode: input.authMode,
-        endpoint: normalizeManagedIdentityEndpoint(input.endpoint ?? ''),
+        endpoint: storageAccountEndpoint(input.accountName ?? ''),
         managedIdentityClientId: input.managedIdentityClientId ?? '',
         connectionString: '',
       };

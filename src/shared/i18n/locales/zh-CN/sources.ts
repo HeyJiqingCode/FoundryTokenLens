@@ -45,14 +45,13 @@ export default {
   'sources.containerCredentialsFailed':
     '无法读取日志容器：请检查凭据、Blob 读取/列举权限及 Storage 网络访问规则。',
   'sources.enterAConnectionString': '请输入连接字符串。',
-  'sources.enterTheFullBlobEndpoint': '填写完整的 Blob endpoint。',
+  'sources.enterAValidStorageAccountName':
+    '请输入有效的 Storage Account 名称：3–24 位小写字母或数字。',
   'sources.invalidConnectionStringFormat': '连接字符串格式不正确。',
   'sources.leaveBlankForTheSystemAssignedIdentity': '留空使用系统分配身份。',
   'sources.logContainers': '诊断日志',
   'sources.managedIdentityAuthenticationFailed':
     'Managed identity 验证失败。请确认部署环境已启用该身份，并已授予 Blob 读取权限。',
-  'sources.managedIdentityRequiresAValidAzureStorageHTTPS':
-    'Managed identity 需要有效的 Azure Storage HTTPS Blob endpoint。',
   'sources.noSavedConnectionStringIsAvailable': '没有可复用的连接字符串，请重新填写。',
   'sources.savedCredentialNeedsSource': '复用已保存的凭据时必须指定数据源。',
   'sources.save': '保存数据源',

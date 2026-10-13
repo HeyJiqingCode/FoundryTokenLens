@@ -5,7 +5,8 @@ import { test, type TestContext } from 'node:test';
 import { LOG_CONTAINERS } from '../src/shared/settings.js';
 import {
   azureBlobInspector,
-  normalizeManagedIdentityEndpoint,
+  createBlobClient,
+  storageAccountEndpoint,
 } from '../src/server/sources/azure-blob.js';
 import { azureBlobReader } from '../src/server/ingestion/blob-reader.js';
 import type { HttpError } from '../src/server/http/errors.js';
@@ -100,19 +101,37 @@ test('a signed-in identity without a Blob data role is told which role to assign
   assert.equal(await inspectDenied(t, 'AuthorizationFailure'), 'sources.containerAccessFailed');
 });
 
-test('managed identity tokens cannot be directed to arbitrary endpoints', () => {
-  for (const url of [
-    'http://fixtureacct.blob.core.windows.net',
-    'https://example.com',
-    'https://fixtureacct.blob.core.windows.net.evil.example',
-    'https://fixtureacct.blob.core.windows.net?sig=secret',
-  ]) {
-    assert.throws(() => normalizeManagedIdentityEndpoint(url));
-  }
+test('managed identity tokens only go to the named storage account’s Blob endpoint', () => {
   assert.equal(
-    normalizeManagedIdentityEndpoint('https://fixtureacct.blob.core.windows.net/'),
+    storageAccountEndpoint(' FixtureAcct '),
     'https://fixtureacct.blob.core.windows.net',
   );
+  for (const name of [
+    '',
+    'ab',
+    'a'.repeat(25),
+    'fixture-acct',
+    'fixtureacct.blob.core.windows.net',
+    'https://fixtureacct.blob.core.windows.net',
+  ]) {
+    assert.throws(() => storageAccountEndpoint(name));
+  }
+  // A stored endpoint is checked again before a client is built for it.
+  for (const endpoint of [
+    'https://example.com',
+    'http://fixtureacct.blob.core.windows.net',
+    'https://fixtureacct.blob.core.windows.net.evil.example',
+    'https://fixtureacct.blob.core.chinacloudapi.cn',
+  ]) {
+    assert.throws(() =>
+      createBlobClient({
+        authMode: 'managed_identity',
+        endpoint,
+        connectionString: '',
+        managedIdentityClientId: '',
+      }),
+    );
+  }
 });
 
 test('actual SDK paginates inventory and uses If-Match and byte ranges for downloads', async (t) => {

@@ -50,7 +50,7 @@ export function createSourceStatistics(
           settings.resolveSource(
             {
               authMode: source.authMode,
-              endpoint: source.endpoint,
+              accountName: source.accountName,
               managedIdentityClientId: source.managedIdentityClientId,
               useSavedCredential: source.authMode === 'connection_string',
               containers: source.containers,
