@@ -162,9 +162,14 @@ function groupedReport(): AnalyticsResponse {
   };
 }
 
-async function open(page: import('@playwright/test').Page, path: string, query = '') {
+async function open(
+  page: import('@playwright/test').Page,
+  path: string,
+  query = '',
+  report = groupedReport(),
+) {
   const state = await mockApi(page);
-  state.report = groupedReport();
+  state.report = report;
   await page.goto(`${path}?language=en-US${query}`);
   await expect(page.locator('.kpi-row').first()).toBeVisible();
 }
@@ -425,4 +430,41 @@ test('dragging across a time chart selects its buckets as the time range, keepin
   expect(search().get('range')).toBeNull();
   expect(search().get('interval')).toBe('1d');
   await expect(chart.locator('.chart-brush')).toHaveCount(0);
+});
+
+test('percentile lines are curves, bridged straight across empty buckets, with points marked only alone or on hover', async ({
+  page,
+}) => {
+  // model-alpha has no calls on the middle day; model-beta peaks on it.
+  const report = groupedReport();
+  const [alpha, beta] = report.stacks!.model;
+  alpha.points = alpha.points.filter((point) => point.i !== 1);
+  beta.points = beta.points.map((point) => ({
+    ...point,
+    p95DurationMs: [2000, 9000, 3000][point.i],
+  }));
+  await open(page, '/analysis/performance', '&interval=1d', report);
+  const chart = card(page, 'P95 duration').locator('.chart svg');
+  const solid = chart.locator('path.chart-line:not(.chart-bridge)');
+  // model-beta is one solid curve; model-alpha is a straight bridge between two points, each marked.
+  await expect(chart.locator('polyline')).toHaveCount(0);
+  await expect(solid).toHaveCount(1);
+  await expect(solid).toHaveAttribute('d', /C/);
+  await expect(chart.locator('.chart-bridge')).toHaveCount(1);
+  await expect(chart.locator('.chart-bridge')).not.toHaveAttribute('d', /C/);
+  await expect(chart.locator('.chart-dot')).toHaveCount(2);
+  // The middle day marks model-beta's peak and lists model-alpha without calls.
+  const box = (await chart.boundingBox())!;
+  await chart.hover({ position: { x: box.width / 2, y: box.height / 2 } });
+  await expect(chart.locator('.chart-dot')).toHaveCount(3);
+  await expect(page.locator('.chart-tooltip')).toContainText('No calls');
+  const peak = Number(await chart.locator('.chart-dot').last().getAttribute('cy'));
+  // The curve never rises above the peak it passes through.
+  const top = await solid.evaluate((path: SVGPathElement) => {
+    const length = path.getTotalLength();
+    return Math.min(
+      ...Array.from({ length: 201 }, (_, k) => path.getPointAtLength((length * k) / 200).y),
+    );
+  });
+  expect(top).toBeGreaterThanOrEqual(peak - 0.5);
 });

@@ -600,7 +600,63 @@ export function TimeBarChart({
   );
 }
 
-/** Lines for ratios and percentiles; empty buckets are skipped and neighbouring points joined. */
+interface LinePoint {
+  /** Bucket index. */
+  i: number;
+  x: number;
+  y: number;
+}
+
+/** A monotone cubic curve through `run`, which never rises above or dips below the points it joins. */
+function monotoneCurve(run: LinePoint[]) {
+  const last = run.length - 1;
+  if (last < 1) return '';
+  const sign = (value: number) => (value < 0 ? -1 : 1);
+  const slopes = run.slice(1).map((p, k) => (p.y - run[k].y) / (p.x - run[k].x));
+  const tangents = run.map((p, k) => {
+    if (k === 0 || k === last) return slopes[0];
+    const [s0, s1] = [slopes[k - 1], slopes[k]];
+    const [h0, h1] = [p.x - run[k - 1].x, run[k + 1].x - p.x];
+    const mean = (s0 * h1 + s1 * h0) / (h0 + h1);
+    return (sign(s0) + sign(s1)) * Math.min(Math.abs(s0), Math.abs(s1), Math.abs(mean) / 2) || 0;
+  });
+  if (last > 1) {
+    tangents[0] = (3 * slopes[0] - tangents[1]) / 2;
+    tangents[last] = (3 * slopes[last - 1] - tangents[last - 1]) / 2;
+  }
+  return run.slice(1).reduce((path, b, k) => {
+    const a = run[k];
+    const third = (b.x - a.x) / 3;
+    return `${path}C${a.x + third},${a.y + third * tangents[k]} ${b.x - third},${b.y - third * tangents[k + 1]} ${b.x},${b.y}`;
+  }, `M${run[0].x},${run[0].y}`);
+}
+
+/**
+ * A line through `points`: a curve over each run of neighbouring buckets (`solid`), straight
+ * bridges across the empty buckets between runs (`bridges`), and the points of one-point runs,
+ * which have no curve to show them (`alone`).
+ */
+function linePaths(points: LinePoint[]) {
+  const runs: LinePoint[][] = [];
+  points.forEach((p, k) => {
+    if (k > 0 && p.i === points[k - 1].i + 1) runs.at(-1)!.push(p);
+    else runs.push([p]);
+  });
+  return {
+    solid: runs.map(monotoneCurve).join(''),
+    bridges: runs
+      .slice(1)
+      .map((run, r) => `M${runs[r].at(-1)!.x},${runs[r].at(-1)!.y}L${run[0].x},${run[0].y}`)
+      .join(''),
+    alone: runs.filter((run) => run.length === 1).map(([p]) => p),
+  };
+}
+
+/**
+ * Lines for ratios and percentiles as smooth curves. An empty bucket has no value, not 0: a faint
+ * dotted straight line joins the points on either side. Points are marked only where the pointer
+ * is and where a point has no neighbour to be drawn with.
+ */
 export function TimeLineChart({
   buckets,
   lines,
@@ -632,7 +688,6 @@ export function TimeLineChart({
     buckets.length,
     format,
   );
-  const dots = values.length <= 90 * Math.max(1, lines.length);
   const brush = useBrush(buckets, interval, timeZone, frame.left, band);
   const tip = brush.span ? null : hover;
   return (
@@ -669,21 +724,42 @@ export function TimeLineChart({
             />
           )}
           {lines.map((line) => {
-            const points = line.values.flatMap((v, i) => (v === null ? [] : [[x(i), y(v)]]));
+            const points = line.values.flatMap((v, i) =>
+              v === null ? [] : [{ i, x: x(i), y: y(v) }],
+            );
+            const { solid, bridges, alone } = linePaths(points);
             return (
               <g key={line.key} style={{ color: line.color }}>
-                <polyline
-                  points={points.map((p) => p.join(',')).join(' ')}
-                  className="chart-line"
-                  strokeDasharray={line.dashed ? '4 3' : undefined}
-                />
-                {(dots || points.length === 1) &&
-                  points.map(([cx, cy]) => (
-                    <circle key={cx} cx={cx} cy={cy} r={2.2} className="chart-dot" />
-                  ))}
+                {bridges && <path d={bridges} className="chart-line chart-bridge" />}
+                {solid && (
+                  <path
+                    d={solid}
+                    className="chart-line"
+                    strokeDasharray={line.dashed ? '4 3' : undefined}
+                  />
+                )}
+                {alone.map((p) => (
+                  <circle key={p.i} cx={p.x} cy={p.y} r={3.5} className="chart-dot" />
+                ))}
               </g>
             );
           })}
+          {tip !== null &&
+            lines.map((line) => {
+              const value = line.values[tip];
+              return (
+                value !== null && (
+                  <circle
+                    key={line.key}
+                    cx={x(tip)}
+                    cy={y(value)}
+                    r={4}
+                    className="chart-dot"
+                    style={{ color: line.color }}
+                  />
+                )
+              );
+            })}
         </svg>
       )}
       {!values.length && <div className="chart-empty-note">{t('insights.noChartData')}</div>}
