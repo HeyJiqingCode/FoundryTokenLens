@@ -19,13 +19,13 @@ A self-hosted dashboard for Microsoft Foundry usage. It reads the diagnostic log
 
 ## Screenshots
 
-![Overview](./assets/overview.png)
+![Overview](./assets/img/readme/overview.png)
 
-![Usage Analysis](./assets/usage-analysis.png)
+![Usage Analysis](./assets/img/readme/usage-analysis.png)
 
-![Request Explorer](./assets/request-explorer.png)
+![Request Explorer](./assets/img/readme/request-explorer.png)
 
-![Settings](./assets/settings.png)
+![Settings](./assets/img/readme/settings.png)
 
 ## How It Works
 
@@ -143,5 +143,5 @@ npm run check
 
 For accounts and sign-in, data sources and scheduled tasks, pricing, and how each report is calculated, see the user manuals:
 
-- [中文使用手册](./docs/user-manual.zh-CN.md)
-- [User Manual (English)](./docs/user-manual.en-US.md)
+- [中文使用手册](./assets/docs/user-manual.zh-CN.md)
+- [User Manual (English)](./assets/docs/user-manual.en-US.md)
